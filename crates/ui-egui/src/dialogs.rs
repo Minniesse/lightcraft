@@ -2049,27 +2049,18 @@ fn about_body(app: &mut LightcraftApp, ui: &mut egui::Ui, t: &Tokens, dlg: &mut 
                 crate::theme::font_credits(app.chinese_font.is_some())
             ));
             ui.add_space(10.0);
-            let r = crate::button::Button::new("Join the ArtCraft Discord")
-                .primary()
-                .large()
-                .min_width(260.0)
-                .widget("button:aboutDiscord")
-                .tooltip(crate::links::DISCORD)
-                .show(ui);
+            let url = crate::links::GITHUB;
+            let r = ui.link(crate::i18n::tr("Source code on GitHub")).on_hover_text(url);
             if r.clicked() {
-                let _ = crate::links::open(app, crate::links::DISCORD);
+                let _ = crate::links::open(app, url);
             }
             ui.add_space(6.0);
-            for (label, url) in [
-                ("LightCraft website", crate::links::APP_PAGE),
-                ("Source code on GitHub", crate::links::GITHUB),
-                ("ArtCraft — more creative apps", crate::links::WEBSITE),
-            ] {
-                let r = ui.link(crate::i18n::tr(label)).on_hover_text(url);
-                if r.clicked() {
-                    let _ = crate::links::open(app, url);
-                }
-            }
+            ui.label(
+                egui::RichText::new(
+                    "Based on LightCraft by the ArtCraft team (https://github.com/storytold/lightcraft). This build is not an ArtCraft product.",
+                )
+                .color(t.text_dim),
+            );
         }
     }
 }

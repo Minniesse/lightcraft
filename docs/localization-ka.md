@@ -60,7 +60,7 @@ craft-fonts yet, and a build without `CRAFT_FONTS_DIR` has no Georgian face and 
 | Reset / Revert | ჩამოყრა / წინა ვერსიაზე დაბრუნება |
 | Undo / Redo | დაბრუნება / გამეორება |
 
-Please follow this table and the shared ArtCraft Georgian glossary when you add strings.
+Please follow this table and the shared Georgian glossary of the Craft apps when you add strings.
 
 ## Maintenance and checks
 

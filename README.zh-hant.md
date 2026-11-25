@@ -1,13 +1,3 @@
-<p align="center">
-  <a href="https://getartcraft.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
-    </picture>
-  </a>
-</p>
-
-
 <h1 align="center">LightCraft</h1>
 
 <h3 align="center">Your photos. Your pixels. Your machine.</h3>
@@ -31,16 +21,6 @@
   <a href="ROADMAP.md"><img alt="Status: young and moving fast" src="https://img.shields.io/badge/status-young%20%26%20moving%20fast-f2a516?style=flat-square"></a>
 </p>
 
-<p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
-</p>
-
-<p align="center">
-  <a href="https://getartcraft.com/apps/lightcraft"><b>getartcraft.com 上的 LightCraft</b></a> ·
-  <a href="https://getartcraft.com/">ArtCraft</a> ·
-  <a href="https://getartcraft.com/apps">所有 Crafting Apps</a>
-</p>
-
 <br>
 
 <p align="center">
@@ -48,10 +28,6 @@
   <br>
   <sub><i>安瑟·亞當斯，《提頓山脈與蛇河》（1942）。公眾領域，美國國家檔案館。於 LightCraft 中顯影。</i></sub>
 </p>
-
-> [!NOTE]
-> **ArtCraft 是一個由各行各業的創作者組成的社群。** 數位藝術、生成藝術、音樂、
-> 遊戲 &mdash; 只要你在創作，你就是我們的一員。**[來 Discord 打聲招呼吧](https://discord.gg/artcraft)。**
 
 <p align="center">
   <a href="#edit-like-you-mean-it">編輯</a> ·
@@ -65,8 +41,7 @@
   <a href="#feature-status">功能狀態</a> ·
   <a href="#quick-start">快速開始</a> ·
   <a href="ROADMAP.md">路線圖</a> ·
-  <a href="#downloads">下載</a> ·
-  <a href="#the-crafting-apps">Crafting Apps</a>
+  <a href="#downloads">下載</a>
 </p>
 
 <br>
@@ -523,13 +498,9 @@ egui 前端是一個可替換的 crate；它之下沒有任何東西知道 UI �
   `unsafe`，對任何來自輸入的資料都做受檢的索引存取，並且每一個當機修復都要附一個回歸測試。細節見
   [AGENTS.md](AGENTS.md#never-crash-outranks-feature-work)。
 
-有問題、想法，或是想先討論一個 bug？來 [Discord](https://discord.gg/artcraft)。
-
 <br>
 
 ## Downloads
-
-**第一次使用 LightCraft？** 從 [getartcraft.com 的 LightCraft 頁面](https://getartcraft.com/apps/lightcraft)下載。那是最簡單的安裝方式。
 
 **想要特定的建置版本或格式？** 在 GitHub 上，[最新發布版](https://github.com/storytold/lightcraft/releases/latest)包含下面列出的所有建置版本，[所有發布版](https://github.com/storytold/lightcraft/releases)則有更早的版本與其說明。檔名中的 `<ver>` 是版本號，`SHA256SUMS.txt` 列出了每個檔案的檢查碼。
 
@@ -583,47 +554,6 @@ RISC-V（riscv64）：`lightcraft-<ver>-linux-riscv64.tar.gz`，僅提供壓縮�
 
 <br>
 
-## The Crafting Apps
-
-LightCraft 是 **Crafting Apps** 之一：來自 [ArtCraft](https://getartcraft.com/) 團隊的免費開源創作工具，
-每一個都用 Rust 從零開始撰寫，每一個都能獨立使用。
-
-| | 應用程式 | 用途 | 程式碼 | 了解更多 |
-|:-:|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.photocraft.png" alt="" width="32" height="32"> | **PhotoCraft** | 影像編輯：圖層、遮色片、文字和真正的 PSD 檔案 | [GitHub](https://github.com/storytold/photocraft) | [網站](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.vectorcraft.png" alt="" width="32" height="32"> | **VectorCraft** | 向量插畫 | [GitHub](https://github.com/storytold/vectorcraft) | [網站](https://getartcraft.com/apps/vectorcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.filmcraft.png" alt="" width="32" height="32"> | **FilmCraft** | 影片剪輯、調色與聲音 | [GitHub](https://github.com/storytold/filmcraft) | [網站](https://getartcraft.com/apps/filmcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.lightcraft.png" alt="" width="32" height="32"> | **LightCraft** | **照片庫與 raw 顯影 · 你現在在這裡** | [GitHub](https://github.com/storytold/lightcraft) | [網站](https://getartcraft.com/apps/lightcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | 閱讀、整理與保護 PDF | [GitHub](https://github.com/storytold/pdfcraft) | [網站](https://getartcraft.com/apps/pdfcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | 動態圖形與視覺特效 | [GitHub](https://github.com/storytold/effectcraft) | [網站](https://getartcraft.com/apps/effectcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | 版面編排與出版 | [GitHub](https://github.com/storytold/designcraft) | [網站](https://getartcraft.com/apps/designcraft) |
-
-還有 [**ArtCraft**](https://getartcraft.com/) 本身，我們為想要真正掌控創作的人打造的 AI 影像與影片工作室。
-
-<br>
-
-<p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
-</p>
-
-<h3 align="center">Come make things with us</h3>
-
-<p align="center">
-  我們的 Discord 是各種創作者聚集的地方：畫畫的人、拍照的人、做動畫的人、剪片子的人、
-  排版的人，還有仍在摸索自己喜歡做什麼的人。分享你在做的東西，
-  尋求幫助，告訴我們哪裡壞了，或者告訴我們你希望這些工具能做到什麼。
-  不管你用什麼媒材，也不管你做了多久，這裡都歡迎你。
-</p>
-
-<p align="center">
-  <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
-  <a href="https://getartcraft.com/">getartcraft.com</a> ·
-  <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/lightcraft">LightCraft</a>
-</p>
-
-<br>
-
 ## License and credits
 
 LightCraft 採用 [MIT](LICENSE-MIT) 或 [Apache-2.0](LICENSE-APACHE) 雙重授權，任你選擇。
@@ -639,17 +569,7 @@ Inter（SIL OFL 1.1）。使用 [craft-fonts](https://github.com/storytold/craft
 還會內嵌其中文與日文字型（Noto Sans CJK SC、BIZ UDPGothic、BIZ UDMincho、Shippori Mincho；SIL OFL 1.1），列於其
 [ATTRIBUTION.md](https://github.com/storytold/craft-fonts/blob/main/ATTRIBUTION.md) 中。所有圖示皆為原創。
 
-[`docs/brand/`](docs/brand/) 中的 ArtCraft 名稱、字標與標誌是
-ArtCraft 團隊的商標，不在本授權範圍內。它們只能以未經修改的形式，作為
-本儲存庫與 LightCraft 的一部分，依 [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) 使用。
-分支與修改版本必須移除它們。
-
-<sub>Adobe、Photoshop、Illustrator、Premiere Pro、Lightroom、Acrobat、After Effects 與 InDesign 是 Adobe Inc. 在美國及／或其他國家的商標或註冊商標。LightCraft 是一個獨立的開源專案，與 Adobe Inc. 沒有任何關係，也未獲其贊助或認可；這些名稱僅用於說明它所相容的工作流程。</sub>
-
-<p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
-  <sub>由 <a href="https://getartcraft.com/">ArtCraft</a> 團隊與社群製作。</sub>
-</p>
+Based on LightCraft by the ArtCraft team (https://github.com/storytold/lightcraft). This build is not an ArtCraft product.
 
 ## Star history
 

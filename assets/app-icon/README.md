@@ -1,7 +1,7 @@
 # LightCraft app icon
 
 A **lynx**, frontal head-and-shoulders portrait with an alert gaze, in the style of an engraving: the
-Crafting Apps "owl template" (full-bleed colour field, tight portrait, the figure in paper with ink line
+Craft apps' shared "owl template" (full-bleed colour field, tight portrait, the figure in paper with ink line
 work and a crisp ink contour, no roundel or border).
 
 ## Palette (exactly three colours)

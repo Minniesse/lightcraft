@@ -5,7 +5,7 @@ order: 10
 verified: 0.7.1
 ---
 
-Download the file for your system from the [latest release](https://github.com/storytold/lightcraft/releases/latest) and install it. In the file names, `<version>` stands for the version number, for example `0.7.1`. The [LightCraft page on getartcraft.com](https://getartcraft.com/apps/lightcraft) also links the download.
+Download the file for your system from the [latest release](https://github.com/storytold/lightcraft/releases/latest) and install it. In the file names, `<version>` stands for the version number, for example `0.7.1`.
 
 ## Windows 11
 
@@ -39,10 +39,6 @@ The release has these files for `x86_64` and `aarch64` (Arm). Replace `x86_64` w
 
 RISC-V and FreeBSD builds are on the release page too. On a Wayland desktop, LightCraft runs through XWayland when it is available, because only X11 gives it file drag-and-drop.
 
-## Install with ArtCraft Launcher
-
-[ArtCraft Launcher](https://getartcraft.com/docs/craft-launcher) lists LightCraft and can install and update it for you. On Windows it installs the release `.msi`.
-
 ## In a web browser
 
 The release also has `lightcraft-web-<version>.zip`, a static site that runs LightCraft in a modern browser. Host it on any static web server.
@@ -54,4 +50,4 @@ The release also has `lightcraft-web-<version>.zip`, a static site that runs Lig
 
 ## Still stuck?
 
-Ask in [Discord](https://discord.gg/artcraft) or open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).
+Open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).

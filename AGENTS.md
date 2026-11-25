@@ -77,7 +77,7 @@ L0 `geom`, `color`, `raster`, `fetch`, `sysmem`, `wincolor` -> L1 `raw`, `codecs
 
 ### Paths and conventions
 - `unsafe` is allowed only in `crates/sysmem` and `crates/wincolor`.
-- Attribution file: `assets/ATTRIBUTION.md`; `cargo xtask assets` checks it. Brand files in `docs/brand/` are trademarks under `docs/brand/LICENSE-brand.txt`.
+- Attribution file: `assets/ATTRIBUTION.md`; `cargo xtask assets` checks it.
 - Fonts come from storytold/craft-fonts through `CRAFT_FONTS_DIR`; Inter in `assets/fonts/` is the one font kept here. Releases set `CRAFT_FONTS_REQUIRED=1`.
 - Test corpora: `cargo xtask corpus --download` into the gitignored `corpus/`; shared PSDs are in storytold/photocraft-corpus.
 - Contributor credits: `docs/contributors.md`.

@@ -5,7 +5,7 @@ order: 30
 verified: 0.7.1
 ---
 
-Open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues), or ask in [Discord](https://discord.gg/artcraft). Include your version, your system, what you did, and what you expected.
+Open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues). Include your version, your system, what you did, and what you expected.
 
 ## What to include
 
@@ -35,4 +35,4 @@ This log names the files LightCraft draws, with their folders. Look through it b
 
 ## Still stuck?
 
-Ask in [Discord](https://discord.gg/artcraft).
+Open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).
