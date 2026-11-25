@@ -6,3 +6,9 @@ lightcraft-web	wasm32	-	rustls	absent
 lightcraft-web	wasm32	-	webpki-roots	absent
 lightcraft-engine	native	-	lightcraft-fetch	present
 lightcraft-segment	native	-	lightcraft-fetch	present
+lightcraft-cli	native	denoise	rustls	present
+lightcraft-cli	native	denoise	craft-update	present
+lightcraft-cli	native	denoise	ureq	present
+lightcraft-web	wasm32	-	craft-update	absent
+lightcraft-web	wasm32	-	ureq	absent
+lightcraft-ui-egui	native	-	craft-update	present

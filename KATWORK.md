@@ -16,11 +16,12 @@ Based on LightCraft by the ArtCraft team (https://github.com/storytold/lightcraf
 |---|---|
 | `chore(katwork): remove the ArtCraft marks` | not proposed upstream (the brand terms let a fork that proposes changes keep the marks; this one is a distributed modified version) |
 | `feat(katwork): network feature, on by default` | draft, not opened (in the fork PR body) |
+| `feat(katwork): self-update feature, on by default` | draft, not opened (in the fork PR body) |
 
 ## The KatWork build
 
 KatWork builds `lightcraft-cli` with `--no-default-features --features denoise` and `lightcraft-web` (through
-`cargo xtask web --no-default-features`) with no features. Cargo features, on by default so an upstream build
+`cargo xtask web --no-default-features`) with no features. Two Cargo features, both on by default so an upstream build
 is unchanged, are then off:
 
 - `network` (in `lightcraft-engine`, `lightcraft-segment` and `lightcraft-denoise`, forwarded by `lightcraft-mcp`,
@@ -29,10 +30,13 @@ is unchanged, are then off:
   `segment.model.download`, `metadata.downloadPlaceNames` and `lens.downloadDatabase`; their status and cancel
   commands stay and report nothing running. The remote denoise client (`LIGHTCRAFT_DENOISE_URL`), the
   `denoise-serve` subcommand (unknown) and the SAM 3 remote worker's client and server are compiled out.
+- `self-update` (in `lightcraft-ui-egui`, forwarded by the CLI, the web crate and the desktop app): `craft-update`
+  (ureq, rustls) leaves the build; Check for Updates says it is not available.
 
 `denoise` stays on (the engine behaves like upstream apart from the network); `rawnind-model`, `heif` and `dhat-heap`
 stay off (none is a default). `scripts/katwork-profile.sh` (CI job `katwork-profile`) checks the graphs and runs
-`crates/engine/tests/katwork_profile.rs` with the gate off. The KatWork lock check must refuse `network` in its `features` and `web_features` columns.
+`crates/engine/tests/katwork_profile.rs` with the gate off. The KatWork lock check must refuse `network` and
+`self-update` in its `features` and `web_features` columns.
 
 ## The marks
 

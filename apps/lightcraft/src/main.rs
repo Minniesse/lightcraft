@@ -203,7 +203,7 @@ impl eframe::App for App {
         self.0.session.release_library_lock();
         // macOS only: the process ends below without dropping the app, so a ready update's helper
         // starts here. Elsewhere dropping the app starts it.
-        #[cfg(target_os = "macos")]
+        #[cfg(all(target_os = "macos", feature = "self-update"))]
         self.0.start_pending_update();
         // macOS (#1331): end the process here, before eframe tears the window down, as Quit from
         // the menu bar already does (PR #444). AccessKit's macOS adapter subclasses the window's
@@ -224,7 +224,7 @@ const EXIT_WAIT: std::time::Duration = std::time::Duration::from_secs(2);
 
 fn main() -> eframe::Result {
     // Windows: the update helper is a copy of this program started with `--finish-update`.
-    #[cfg(windows)]
+    #[cfg(all(windows, feature = "self-update"))]
     if let Some(result) = craft_update::self_update::finish(&lightcraft_ui_egui::UPDATE_APP, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
         std::process::exit(i32::from(result.is_err()));
     }
@@ -364,6 +364,7 @@ fn main() -> eframe::Result {
                 // HDR display: SDR unless the surface, platform and display all allow HDR
                 hdr_display::report(cc.wgpu_render_state.as_ref().map(|r| r.target_format));
                 let mut app = LightcraftApp::new(session, services(cc, app_log_file.as_deref()));
+                #[cfg(feature = "self-update")]
                 app.set_startup_update_check(true);
                 if let Some(ui) = prefs {
                     app.ui = ui;

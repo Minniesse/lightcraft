@@ -29,9 +29,11 @@ dhat = { workspace = true, optional = true }
 lightcraft-testkit = { workspace = true }
 
 [features]
-default = ["denoise", "network"]
+default = ["denoise", "network", "self-update"]
 # The engine's downloads and remote clients, and the `denoise-serve` subcommand. KatWork builds without it.
 network = ["lightcraft-engine/network", "lightcraft-mcp/network", "lightcraft-ui-egui/network", "lightcraft-denoise/network"]
+# craft-update, linked through lightcraft-ui-egui (the `snapshot` subcommand). KatWork builds without it.
+self-update = ["lightcraft-ui-egui/self-update"]
 denoise = ["lightcraft-engine/denoise"]
 rawnind-model = ["denoise", "lightcraft-engine/rawnind-model"]
 # Heap profiling: `cargo run --release -p lightcraft-cli --features dhat-heap -- snapshot …` counts

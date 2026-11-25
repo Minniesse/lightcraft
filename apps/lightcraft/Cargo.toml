@@ -10,8 +10,9 @@ default-run = "lightcraft"
 workspace = true
 
 [features]
-default = ["denoise", "network"]
+default = ["denoise", "network", "self-update"]
 network = ["lightcraft-engine/network", "lightcraft-ui-egui/network"]
+self-update = ["lightcraft-ui-egui/self-update", "dep:craft-update"]
 denoise = ["lightcraft-engine/denoise"]
 rawnind-model = ["denoise", "lightcraft-engine/rawnind-model"]
 # Open HEIC/HEIF photos (the optional craft-heif crate). Not default so distributors choose
@@ -58,7 +59,7 @@ objc2-foundation = { workspace = true }
 lightcraft-testkit = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-craft-update = { workspace = true }
+craft-update = { workspace = true, optional = true }
 # the colour profile of the monitor showing the window (`win_screen_profile`)
 lightcraft-wincolor = { workspace = true }
 raw-window-handle = "0.6"
