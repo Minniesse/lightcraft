@@ -250,7 +250,7 @@ fn find(masks: &mut [Mask], id: u32, c: &str) -> Result<usize> {
 }
 
 pub fn specs() -> Vec<CommandSpec> {
-    vec![
+    let v = vec![
         cmd!(
             "mask.add",
             "Create New Mask",
@@ -599,30 +599,6 @@ pub fn specs() -> Vec<CommandSpec> {
                     "mirrors": g.mirrors().len(),
                     "download": g.download_status(),
                 }))
-            }
-        ),
-        cmd!(
-            query "segment.model.download",
-            "Download AI Mask Model",
-            [],
-            None,
-            "{acknowledged: true} — download the SAM 3 model (about 3.4 GB, Meta's SAM License, not LightCraft's) in the background, from the configured mirrors; only after the user agreed to it. Watch segment.model.status; segment.model.cancel stops it (it resumes later) → {started, installed, downloading}",
-            super::always,
-            |s, p| {
-                let c = "segment.model.download";
-                if p.get("acknowledged").and_then(Value::as_bool) != Some(true) {
-                    return Err(bad(
-                        c,
-                        format!(
-                            "the SAM 3 model is a {:.1} GB download under Meta's {} ({}): pass `acknowledged: true` once the user has agreed to download it",
-                            crate::segment::MODEL_BYTES as f64 / 1e9,
-                            crate::segment::LICENSE_NAME,
-                            crate::segment::LICENSE_URL
-                        ),
-                    ));
-                }
-                let started = s.segmenter.start_download(&s.activity).map_err(ai_err)?;
-                Ok(json!({"started": started, "installed": s.segmenter.installed(), "downloading": s.segmenter.download_status().running}))
             }
         ),
         cmd!(
@@ -1099,7 +1075,36 @@ pub fn specs() -> Vec<CommandSpec> {
             s.set_develop(id, dd, "Delete Red Eye")?;
             ok()
         }),
-    ]
+    ];
+    // downloads reach another computer
+    #[cfg(feature = "network")]
+    let v: Vec<CommandSpec> = v.into_iter().chain([
+            cmd!(
+                query "segment.model.download",
+                "Download AI Mask Model",
+                [],
+                None,
+                "{acknowledged: true} — download the SAM 3 model (about 3.4 GB, Meta's SAM License, not LightCraft's) in the background, from the configured mirrors; only after the user agreed to it. Watch segment.model.status; segment.model.cancel stops it (it resumes later) → {started, installed, downloading}",
+                super::always,
+                |s, p| {
+                    let c = "segment.model.download";
+                    if p.get("acknowledged").and_then(Value::as_bool) != Some(true) {
+                        return Err(bad(
+                            c,
+                            format!(
+                                "the SAM 3 model is a {:.1} GB download under Meta's {} ({}): pass `acknowledged: true` once the user has agreed to download it",
+                                crate::segment::MODEL_BYTES as f64 / 1e9,
+                                crate::segment::LICENSE_NAME,
+                                crate::segment::LICENSE_URL
+                            ),
+                        ));
+                    }
+                    let started = s.segmenter.start_download(&s.activity).map_err(ai_err)?;
+                    Ok(json!({"started": started, "installed": s.segmenter.installed(), "downloading": s.segmenter.download_status().running}))
+                }
+            ),
+    ]).collect();
+    v
 }
 
 /// Spot radius limits (fraction of the long edge).

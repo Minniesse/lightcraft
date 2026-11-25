@@ -10,7 +10,8 @@ default-run = "lightcraft"
 workspace = true
 
 [features]
-default = ["denoise"]
+default = ["denoise", "network"]
+network = ["lightcraft-engine/network", "lightcraft-ui-egui/network"]
 denoise = ["lightcraft-engine/denoise"]
 rawnind-model = ["denoise", "lightcraft-engine/rawnind-model"]
 # Open HEIC/HEIF photos (the optional craft-heif crate). Not default so distributors choose

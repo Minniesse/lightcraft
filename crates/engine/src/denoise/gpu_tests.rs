@@ -65,6 +65,7 @@ fn a_tile_on_the_card_is_the_cpus_tile() {
 }
 
 /// A server on this computer running `cpu` for the model with `sha256`.
+#[cfg(feature = "network")]
 fn server(cpu: lightcraft_denoise::runtime::CpuRunner, sha256: &str, tile: usize) -> String {
     use lightcraft_denoise::remote::{ModelId, ServerOptions, serve};
     let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -76,6 +77,7 @@ fn server(cpu: lightcraft_denoise::runtime::CpuRunner, sha256: &str, tile: usize
     addr
 }
 
+#[cfg(feature = "network")]
 fn with_remote(path: &Path, tile: u64, addr: &str, sha256: &str) -> Network {
     let manifest = DenoiserManifest {
         id: "synthetic".into(),
@@ -95,6 +97,7 @@ fn with_remote(path: &Path, tile: u64, addr: &str, sha256: &str) -> Network {
     network(path, &manifest, Some(remote)).unwrap()
 }
 
+#[cfg(feature = "network")]
 #[test]
 fn a_remote_server_shares_the_tiles_and_drops_out_when_it_cannot() {
     let (_, cpu, path) = model("remote", 64);

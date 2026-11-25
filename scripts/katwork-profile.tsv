@@ -1,0 +1,8 @@
+# <package> <native|wasm32> <katwork-features|-> <crate> <present|absent>: see scripts/katwork-profile.sh
+lightcraft-cli	native	denoise	lightcraft-fetch	present
+lightcraft-cli	native	denoise	webpki-roots	present
+lightcraft-web	wasm32	-	lightcraft-fetch	absent
+lightcraft-web	wasm32	-	rustls	absent
+lightcraft-web	wasm32	-	webpki-roots	absent
+lightcraft-engine	native	-	lightcraft-fetch	present
+lightcraft-segment	native	-	lightcraft-fetch	present

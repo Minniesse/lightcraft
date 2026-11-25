@@ -48,9 +48,10 @@ commands:
                   check docs/parity-checklist.md (every cmd:/ctl: id and path it cites exists) and print the
                   Lightroom parity summary; --write refreshes the summary table in the document
   wasm            cargo check --target wasm32-unknown-unknown for the wasm-safe crates (+ the web app), in one call
-  web [--serve [port]] [--dev]
+  web [--serve [port]] [--dev] [--no-default-features] [--features <list>]
                   build the browser app (apps/lightcraft-web) into <target>/web-site/;
-                  --serve serves it on http://127.0.0.1:<port> (default 8080)
+                  --serve serves it on http://127.0.0.1:<port> (default 8080); --no-default-features and
+                  --features go to its cargo build only
   ci [--hardware] [--summary-md] [--quick [--base REF]]
                   fmt --check, clippy -D warnings, heif, test, GPU probe, parity refs, layers, assets, roots, wasm
                   (stops at first failure). Tests run under cargo test (cargo nextest with

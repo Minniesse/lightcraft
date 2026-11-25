@@ -182,6 +182,8 @@ fn main() -> ExitCode {
         Some("merge") => merge(&args[1..]),
         Some("synth-merge") => synth_merge(&args[1..]),
         Some("controls") => controls(&args[1..]),
+        // a TCP server for other computers: only with `network` (else an unknown subcommand)
+        #[cfg(feature = "network")]
         Some("denoise-serve") => denoise_serve(&args[1..]),
         Some("calibrate") => calibrate(&args[1..]),
         Some("bench-cull") => bench_cull::run(&args[1..]),
@@ -1064,7 +1066,7 @@ fn controls(args: &[String]) -> Result<(), String> {
 }
 
 /// `denoise-serve`: the remote half of AI Denoise (`lightcraft_denoise::remote`).
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 fn denoise_serve(args: &[String]) -> Result<(), String> {
     use lightcraft_denoise::remote::{DEFAULT_PORT, ServerOptions, serve};
     use lightcraft_engine::denoise::RunOn;
@@ -1103,7 +1105,7 @@ fn denoise_serve(args: &[String]) -> Result<(), String> {
     serve(listener, s.model, s.tile, s.device, s.run, opts, std::sync::Arc::new(|m: &str| eprintln!("lightcraft-cli denoise-serve: {m}")))
 }
 
-#[cfg(not(feature = "denoise"))]
+#[cfg(all(not(feature = "denoise"), feature = "network"))]
 fn denoise_serve(_: &[String]) -> Result<(), String> {
     Err("denoise-serve: this build has no denoise support (build with the `denoise` feature)".into())
 }

@@ -196,7 +196,7 @@ impl Drop for Downloads {
 }
 
 /// What went wrong, in words the user can act on.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 fn explain(e: &lightcraft_fetch::DownloadError) -> String {
     use lightcraft_fetch::DownloadError;
     match e {
@@ -209,7 +209,7 @@ fn explain(e: &lightcraft_fetch::DownloadError) -> String {
 }
 
 /// Fetch `spec` from `mirror` (the address without the file name) into `staging`, check it and leave it there.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 fn fetch(spec: &Download, mirror: &str, staging: &Path, shared: &Shared) -> Result<(), lightcraft_fetch::DownloadError> {
     let file = lightcraft_fetch::FileSpec { name: &spec.file_name, size: Some(spec.size_bytes), sha256: Some(&spec.sha256), max: spec.size_bytes };
     lightcraft_fetch::download(&[file], &[mirror.to_string()], staging, &lightcraft_fetch::Options::default(), &shared.cancel, &mut |p| {
@@ -217,9 +217,9 @@ fn fetch(spec: &Download, mirror: &str, staging: &Path, shared: &Shared) -> Resu
     })
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(not(feature = "network"), target_arch = "wasm32"))]
 fn fetch(_: &Download, _: &str, _: &Path, _: &Shared) -> Result<(), String> {
-    Err("the web build downloads no models".into())
+    Err("this build downloads no models".into())
 }
 
 /// The whole job: reuse a verified earlier copy, else fetch, check and stage. Always ends in a final [`State`].
@@ -228,17 +228,17 @@ fn run(spec: &Download, mirror: &str, staging: &Path, shared: &Shared) {
     let part = staging.join(format!("{}.part", spec.file_name));
     match fetch(spec, mirror, staging, shared) {
         Ok(()) => shared.set(State::Done { path: target, sha256: spec.sha256.to_string() }),
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
         Err(lightcraft_fetch::DownloadError::Cancelled) => {
             let _ = std::fs::remove_file(&part);
             shared.set(State::Cancelled);
         }
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
         Err(e) => {
             let _ = std::fs::remove_file(&part);
             shared.set(State::Failed(explain(&e)));
         }
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(any(not(feature = "network"), target_arch = "wasm32"))]
         Err(e) => {
             let _ = std::fs::remove_file(&part);
             shared.set(State::Failed(e));
@@ -249,7 +249,7 @@ fn run(spec: &Download, mirror: &str, staging: &Path, shared: &Shared) {
 // Two stacked cfgs (not `all(test, …)`): clippy only recognises a plain `cfg(test)`
 // module as test code, so the `allow-*-in-tests` settings in clippy.toml apply to its helpers.
 #[cfg(test)]
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
     use lightcraft_faces::hash::sha256_hex;

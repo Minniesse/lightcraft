@@ -70,13 +70,13 @@ lightcraft-gpu = { path = "crates/gpu" }
 lightcraft-catalog = { path = "crates/catalog" }
 lightcraft-preview = { path = "crates/preview" }
 lightcraft-merge = { path = "crates/merge" }
-lightcraft-engine = { path = "crates/engine" }
-lightcraft-ui-egui = { path = "crates/ui-egui" }
-lightcraft-mcp = { path = "crates/mcp" }
+lightcraft-engine = { path = "crates/engine", default-features = false }
+lightcraft-ui-egui = { path = "crates/ui-egui", default-features = false }
+lightcraft-mcp = { path = "crates/mcp", default-features = false }
 lightcraft-fetch = { path = "crates/fetch" }
 # HEIC/HEIF: the shared decoder (moved from crates/heif; craft-libs#784).
 craft-heif = { git = "https://github.com/storytold/craft-libs", rev = "b2d2a1e948c43d95aa769d4f0a06fe6b869edc39", default-features = false }
-lightcraft-segment = { path = "crates/segment" }
+lightcraft-segment = { path = "crates/segment", default-features = false }
 lightcraft-geocode = { path = "crates/geocode" }
 lightcraft-slideshow = { path = "crates/slideshow" }
 lightcraft-testkit = { path = "crates/testkit" }

@@ -42,6 +42,7 @@ fn settle(s: &mut Session, limit: Duration) -> Vec<String> {
     }
 }
 
+#[cfg(feature = "network")]
 #[test]
 fn status_and_model_commands_without_the_model() {
     let mut s = Session::with_demo();
@@ -74,6 +75,7 @@ fn status_and_model_commands_without_the_model() {
 }
 
 #[cfg(feature = "sam")]
+#[cfg(feature = "network")]
 #[test]
 fn a_failing_download_ends_with_an_error_and_never_blocks() {
     use std::io::{BufRead, BufReader, Write};
@@ -260,6 +262,7 @@ fn background_object_clicks_over_the_cap_are_refused_before_queueing() {
 }
 
 #[cfg(feature = "sam")]
+#[cfg(feature = "network")]
 #[test]
 fn a_running_model_download_shows_in_activity_and_cancels() {
     use std::io::{BufRead, BufReader, Write};

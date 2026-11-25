@@ -15,6 +15,24 @@ Based on LightCraft by the ArtCraft team (https://github.com/storytold/lightcraf
 | Patch | Upstream PR |
 |---|---|
 | `chore(katwork): remove the ArtCraft marks` | not proposed upstream (the brand terms let a fork that proposes changes keep the marks; this one is a distributed modified version) |
+| `feat(katwork): network feature, on by default` | draft, not opened (in the fork PR body) |
+
+## The KatWork build
+
+KatWork builds `lightcraft-cli` with `--no-default-features --features denoise` and `lightcraft-web` (through
+`cargo xtask web --no-default-features`) with no features. Cargo features, on by default so an upstream build
+is unchanged, are then off:
+
+- `network` (in `lightcraft-engine`, `lightcraft-segment` and `lightcraft-denoise`, forwarded by `lightcraft-mcp`,
+  `lightcraft-ui-egui`, the CLI, the web crate and the desktop app): `lightcraft-fetch` (rustls, webpki-roots) leaves
+  the build. The commands that start a download are unknown: `denoise.models.download`, `faces.models.download`,
+  `segment.model.download`, `metadata.downloadPlaceNames` and `lens.downloadDatabase`; their status and cancel
+  commands stay and report nothing running. The remote denoise client (`LIGHTCRAFT_DENOISE_URL`), the
+  `denoise-serve` subcommand (unknown) and the SAM 3 remote worker's client and server are compiled out.
+
+`denoise` stays on (the engine behaves like upstream apart from the network); `rawnind-model`, `heif` and `dhat-heap`
+stay off (none is a default). `scripts/katwork-profile.sh` (CI job `katwork-profile`) checks the graphs and runs
+`crates/engine/tests/katwork_profile.rs` with the gate off. The KatWork lock check must refuse `network` in its `features` and `web_features` columns.
 
 ## The marks
 

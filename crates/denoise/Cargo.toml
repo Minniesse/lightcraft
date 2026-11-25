@@ -9,7 +9,9 @@ description = "LightCraft AI denoise (L1): denoise-model manifests, Bayer packin
 workspace = true
 
 [features]
-default = []
+default = ["network"]
+# Running tiles on another computer (`remote`: the TCP client and the `denoise-serve` server).
+network = []
 runtime = ["dep:faer"]
 # Product-policy switch: absent by default; users may install their own model.
 rawnind-model = ["lightcraft-denoise-core/rawnind-model"]

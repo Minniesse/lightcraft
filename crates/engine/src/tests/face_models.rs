@@ -226,6 +226,7 @@ fn detect_without_the_model_says_where_to_get_it() {
     let _ = std::fs::remove_dir_all(&d);
 }
 
+#[cfg(feature = "network")]
 #[test]
 fn the_detector_and_the_recognisers_can_be_downloaded_and_the_download_is_refused_otherwise() {
     let d = temp("dl-refusals");
@@ -326,6 +327,7 @@ fn detect_replaces_only_earlier_detections_and_is_one_undo_step() {
 
 /// Opt-in, needs the internet: `cargo test -p lightcraft-engine real_download -- --ignored --nocapture`. Downloads YuNet
 /// from its pinned address the way the app does, waits for it to be installed, then finds faces with it.
+#[cfg(feature = "network")]
 #[test]
 #[ignore = "downloads from github.com"]
 fn real_download_of_yunet_installs_it_and_detects() {
@@ -358,6 +360,7 @@ fn real_download_of_yunet_installs_it_and_detects() {
 
 /// Opt-in, needs the internet: the recognisers are big, so this only checks that bytes start to arrive (through the
 /// hosts' redirects) and that cancelling leaves nothing behind.
+#[cfg(feature = "network")]
 #[test]
 #[ignore = "downloads from github.com and huggingface.co"]
 fn real_downloads_of_the_recognisers_start_and_can_be_cancelled() {
@@ -541,6 +544,7 @@ fn a_download_that_arrives_is_installed_and_switched_on_by_itself() {
     let _ = std::fs::remove_dir_all(&d);
 }
 
+#[cfg(feature = "network")]
 #[test]
 fn the_users_own_catalog_adds_models_with_the_same_download_and_install() {
     use crate::face_download::State;

@@ -29,6 +29,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }
 
+[features]
+default = ["network"]
+# The engine's downloads and remote clients (`lightcraft-engine/network`).
+network = ["lightcraft-engine/network"]
+
 [dev-dependencies]
 # tests record why they skip (`cargo xtask ci` lists the skips)
 lightcraft-testkit = { workspace = true }

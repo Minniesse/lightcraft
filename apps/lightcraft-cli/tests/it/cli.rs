@@ -1156,7 +1156,7 @@ fn snapshot_leaves_desktop_gpu_preferences_untouched() {
 
 /// `denoise-serve` serves the selected installed model; a client greets it and gets the CPU's answer for a tile
 /// (within half-float rounding on the wire), and a wrong token or a missing token variable is refused.
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 #[test]
 fn denoise_serve_runs_tiles_for_another_computer() {
     use lightcraft_denoise::manifest::{DenoiserManifest, Domain, Gain};

@@ -16,7 +16,7 @@
 //! This crate is therefore licensed under the Apache License 2.0 only (not the MIT option of
 //! the rest of LightCraft). No UI dependencies (L3).
 //!
-//! [`fetch`] downloads the model, only when the user asks for it (from configurable mirrors,
+//! `fetch` (the `network` feature) downloads the model, only when the user asks for it (from configurable mirrors,
 //! verified before use). Nothing in LightCraft requires the model: without it, AI masks report
 //! that it isn't installed and everything else works.
 //!
@@ -30,7 +30,7 @@
 mod clip;
 #[cfg(not(target_arch = "wasm32"))]
 mod detector;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 pub mod fetch;
 pub mod mask;
 #[cfg(not(target_arch = "wasm32"))]

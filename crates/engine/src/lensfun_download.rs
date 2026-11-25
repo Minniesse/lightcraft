@@ -30,7 +30,7 @@ pub const URL_ENV: &str = "LIGHTCRAFT_LENSFUN_URL";
 /// The file written once every database file is in place: the pin it holds says which data the folder has.
 pub const MARKER: &str = "SOURCE.txt";
 /// The suffix of the folder beside the database folder where files wait until all have arrived.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 const STAGING: &str = "download";
 /// The suffix of the folder the previous database is moved to while the new one takes its place.
 const PREVIOUS: &str = "previous";
@@ -39,7 +39,7 @@ const PREVIOUS: &str = "previous";
 #[cfg(not(target_arch = "wasm32"))]
 const LOCK: &str = "lock";
 /// Largest database file accepted (the biggest is under 1 MB).
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 const MAX_FILE: u64 = 8 << 20;
 
 /// The database files at [`COMMIT`]: name, size in bytes, SHA-256.
@@ -226,11 +226,11 @@ pub fn download_megabytes() -> u64 {
 
 /// The mirrors to try, in order: [`URL_ENV`]'s, then lensfun's own ([`DEFAULT_MIRROR`]).
 pub fn mirrors() -> Vec<String> {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     {
         lightcraft_fetch::mirrors(std::env::var(URL_ENV).ok().as_deref(), None, &[DEFAULT_MIRROR])
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(not(feature = "network"), target_arch = "wasm32"))]
     {
         Vec::new()
     }
@@ -395,7 +395,7 @@ impl DirLock {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 fn fetch_all(dir: &Path, mirrors: &[String], files: &[Pin], shared: &Shared) -> Result<usize, String> {
     // (from before the recovery through the swap: another download of this folder would move the same folders)
     let _lock = DirLock::take(dir)?;
@@ -434,7 +434,7 @@ from https://github.com/lensfun/lensfun, downloaded by LightCraft.
 /// Replace the database folder `dir` with the complete `staged` one, moving with `rename`: the old folder is moved
 /// aside, the staged one takes its place, and the old one is removed. When the second move fails the old folder is
 /// put back, so `dir` is always either the previous complete database or the new one, never a mix.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 fn publish(staged: &Path, dir: &Path, rename: impl Fn(&Path, &Path) -> std::io::Result<()>) -> Result<(), String> {
     let previous = beside(dir, PREVIOUS);
     let had = dir.exists();
@@ -463,7 +463,7 @@ fn publish(staged: &Path, dir: &Path, rename: impl Fn(&Path, &Path) -> std::io::
 
 /// Remove the XML files in `dir` that are not among `files` (nothing else in the folder is touched) with `remove`: an
 /// error names the first that could not be removed, or why the folder could not be listed.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 fn remove_stale(dir: &Path, files: &[Pin], remove: impl Fn(&Path) -> std::io::Result<()>) -> Result<(), String> {
     // a folder that can't be listed (or an entry that can't be read) may still hold an old file: an error, not success
     let listing = |e: std::io::Error| format!("could not list the lens database folder {}: {e}", dir.display());
@@ -483,12 +483,12 @@ fn remove_stale(dir: &Path, files: &[Pin], remove: impl Fn(&Path) -> std::io::Re
     Ok(())
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(not(feature = "network"), target_arch = "wasm32"))]
 fn fetch_all(_: &Path, _: &[String], _: &[Pin], _: &Shared) -> Result<usize, String> {
-    Err("the web build downloads no lens database".into())
+    Err("this build downloads no lens database".into())
 }
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
+#[cfg(all(test, feature = "network", not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
     use std::io::{BufRead, BufReader, Write};

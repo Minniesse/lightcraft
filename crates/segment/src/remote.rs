@@ -1,16 +1,28 @@
 //! Private SAM 3 transport. Bind the worker to loopback and forward it over SSH.
+//!
+//! Without the `network` feature nothing here connects or listens: [`configured`] is always `None`,
+//! [`Client::connect`] and [`serve`] refuse, and the request types stay for the in-process worker.
 use std::io::{self, Read, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+#[cfg(feature = "network")]
+use std::net::TcpListener;
+use std::net::{SocketAddr, TcpStream};
 use std::path::Path;
+#[cfg(feature = "network")]
 use std::time::Duration;
 
-use crate::{Click, Encoded, INPUT, MASK_SIDE, Sam3};
+#[cfg(feature = "network")]
+use crate::Click;
+use crate::{Encoded, INPUT, MASK_SIDE, Sam3};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "network")]
 const CONTROL_LIMIT: usize = 16 * 1024;
 const RESPONSE_LIMIT: usize = 4 * 1024 * 1024;
+#[cfg(feature = "network")]
 const TIMEOUT: Duration = Duration::from_secs(9 * 60);
 pub const ENV: &str = "LIGHTCRAFT_SAM3_REMOTE";
+#[cfg(not(feature = "network"))]
+const NO_NETWORK: &str = "the remote SAM 3 worker is not available in this build (built without the `network` feature)";
 
 #[derive(Serialize, Deserialize)]
 pub enum Operation {
@@ -56,7 +68,7 @@ impl Request {
 }
 
 pub fn configured() -> Option<String> {
-    std::env::var(ENV).ok().filter(|v| !v.trim().is_empty())
+    if cfg!(feature = "network") { std::env::var(ENV).ok().filter(|v| !v.trim().is_empty()) } else { None }
 }
 
 pub fn read_frame(reader: &mut impl Read, limit: usize) -> io::Result<Vec<u8>> {
@@ -83,6 +95,12 @@ pub struct Client {
 }
 
 impl Client {
+    #[cfg(not(feature = "network"))]
+    pub fn connect(_: &str) -> Result<Self, String> {
+        Err(NO_NETWORK.into())
+    }
+
+    #[cfg(feature = "network")]
     pub fn connect(endpoint: &str) -> Result<Self, String> {
         let address: SocketAddr = endpoint.parse().map_err(|e| format!("SAM endpoint must be an IP:port: {e}"))?;
         if !address.ip().is_loopback() {
@@ -128,6 +146,7 @@ pub fn text_logits(model: &mut Sam3, enc: &mut Encoded, text: &str) -> crate::Re
     Ok(merged)
 }
 
+#[cfg(feature = "network")]
 fn predict(model: &mut Sam3, enc: &mut Encoded, operation: Operation) -> Result<Option<Vec<f32>>, String> {
     match operation {
         Operation::Prepare => {
@@ -147,6 +166,7 @@ fn predict(model: &mut Sam3, enc: &mut Encoded, operation: Operation) -> Result<
     }
 }
 
+#[cfg(feature = "network")]
 fn serve_client(stream: &mut TcpStream, dir: &Path, device: candle_core::Device) -> Result<(), String> {
     stream.set_read_timeout(Some(Duration::from_secs(10 * 60))).map_err(|e| e.to_string())?;
     stream.set_write_timeout(Some(Duration::from_secs(30))).map_err(|e| e.to_string())?;
@@ -194,6 +214,12 @@ fn serve_client(stream: &mut TcpStream, dir: &Path, device: candle_core::Device)
     }
 }
 
+#[cfg(not(feature = "network"))]
+pub fn serve(_: SocketAddr, _: &Path, _: candle_core::Device) -> Result<(), String> {
+    Err(NO_NETWORK.into())
+}
+
+#[cfg(feature = "network")]
 pub fn serve(address: SocketAddr, dir: &Path, device: candle_core::Device) -> Result<(), String> {
     if !address.ip().is_loopback() || !device.is_metal() {
         return Err("SAM worker requires a loopback address and a Metal device".into());

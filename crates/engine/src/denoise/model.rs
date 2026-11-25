@@ -1,12 +1,14 @@
+#[cfg(all(feature = "denoise", feature = "network"))]
+use super::PoisonError;
 #[cfg(feature = "denoise")]
 use super::gpu::{GPU_CRASHED, GPU_MAX_FALLBACKS, GPU_PARALLEL, GPU_SLOW, GPU_STUCK, card_is_faster, make_gpu};
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 use super::settings::{installed_models, read_settings};
 #[cfg(feature = "denoise")]
 use super::state::Pace;
 use super::{Arc, DenoiserManifest, Mutex, Path, TileRunner, Value, json};
 #[cfg(feature = "denoise")]
-use super::{AtomicBool, AtomicUsize, OnceLock, Ordering, PathBuf, PoisonError, RunError};
+use super::{AtomicBool, AtomicUsize, OnceLock, Ordering, PathBuf, RunError};
 /// Stack of the threads that run the model (the runtime recurses through its graph).
 pub(super) const STACK: usize = 16 << 20;
 
@@ -93,12 +95,17 @@ pub(super) struct Network {
     /// Another computer's graphics card (`LIGHTCRAFT_DENOISE_URL` + `LIGHTCRAFT_DENOISE_TOKEN`; see
     /// `docs/denoise.md` → Another computer's graphics card), greeted on first use: it takes tiles while it has a free
     /// slot, on top of this computer's runner.
+    #[cfg_attr(not(feature = "network"), allow(dead_code))] // (always `None` without `network`)
     pub(super) remote: Option<RemoteSide>,
     /// Whether this computer's share runs on the card (else the CPU), as chosen for the photo started last.
     pub(super) local_card: AtomicBool,
 }
 
-#[cfg(feature = "denoise")]
+/// Without `network` there is never a server: `Option<RemoteSide>` is always `None`.
+#[cfg(all(feature = "denoise", not(feature = "network")))]
+pub(super) type RemoteSide = std::convert::Infallible;
+
+#[cfg(all(feature = "denoise", feature = "network"))]
 pub(super) struct RemoteSide {
     runner: lightcraft_denoise::remote::Remote,
     /// The greeting, and the server's time for the check tile there and back (ms; the faster of two runs).
@@ -108,7 +115,7 @@ pub(super) struct RemoteSide {
     slower: Mutex<Option<(f64, f64)>>,
 }
 
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 impl RemoteSide {
     /// From the environment, for the model whose file has `sha256` and tiles of `tile` cells.
     fn from_env(sha256: &str, tile: usize) -> Option<RemoteSide> {
@@ -251,6 +258,7 @@ impl Network {
 #[cfg(feature = "denoise")]
 impl TileRunner for Network {
     fn run(&self, input: &[f32]) -> Result<Vec<f32>, RunError> {
+        #[cfg(feature = "network")]
         if let Some(Ok(remote)) = self.remote.as_ref().filter(|r| r.share.load(Ordering::Relaxed)).map(|r| r.usable(false))
             && let Some(Ok(out)) = remote.try_run(input)
         {
@@ -283,6 +291,7 @@ impl Model for Network {
             Err(_) => (false, threads),
         };
         self.local_card.store(card, Ordering::Relaxed);
+        #[cfg(feature = "network")]
         if let Some(r) = &self.remote {
             // this computer's time for a tile: the card's, or the CPU's with `threads` tiles sharing it (as
             // `card_is_faster` counts them); unknown when the card was never set up (then the server is used)
@@ -347,6 +356,7 @@ impl Model for Network {
             o.insert("cpuMs".into(), json!(g.cpu_ms));
             o.insert("fellBack".into(), json!(self.fallbacks.load(Ordering::Relaxed)));
         }
+        #[cfg(feature = "network")]
         if let (Some(r), Some(o)) = (&self.remote, v.as_object_mut()) {
             o.insert("remote".into(), r.describe());
         }
@@ -360,12 +370,15 @@ pub(crate) fn default_loader() -> Loader {
     {
         Arc::new(|path, manifest| {
             // the server must run this very file: identified by the manifest's hash, else the file's
-            let sha256 = match &manifest.sha256 {
+            #[cfg(feature = "network")]
+            let remote = match &manifest.sha256 {
                 Some(h) => Some(h.clone()),
                 None if std::env::var_os("LIGHTCRAFT_DENOISE_URL").is_some() => lightcraft_denoise::hash::sha256_file(path).ok(),
                 None => None,
-            };
-            let remote = sha256.and_then(|h| RemoteSide::from_env(&h, manifest.tile as usize));
+            }
+            .and_then(|h| RemoteSide::from_env(&h, manifest.tile as usize));
+            #[cfg(not(feature = "network"))]
+            let remote = None;
             Ok(Arc::new(network(path, manifest, remote)?) as Arc<dyn Model>)
         })
     }
@@ -392,7 +405,7 @@ pub(super) fn network(path: &Path, manifest: &DenoiserManifest, remote: Option<R
 }
 
 /// A model ready to be served to other computers (`lightcraft-cli denoise-serve`).
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 pub struct Serving {
     pub model: lightcraft_denoise::remote::ModelId,
     pub tile: usize,
@@ -403,7 +416,7 @@ pub struct Serving {
 
 /// The installed model `id` (default: the one selected in Settings) in the models folder `dir` (default: this user's),
 /// set up to run on `run_on` as the app would: the card checked against the CPU first, the CPU when the card can't.
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 pub fn serving(dir: Option<&Path>, id: Option<&str>, run_on: RunOn) -> Result<Serving, String> {
     let dir = match dir {
         Some(d) => d.to_path_buf(),
