@@ -281,7 +281,12 @@ pub fn settings_tab(app: &mut LightcraftApp, ui: &mut egui::Ui, t: &Tokens) {
         model_row(app, ui, t, m, downloads.iter().find(|d| d["id"] == m["id"]), runtime);
     }
     if !all.iter().any(|m| m["role"] == "detector" && m["installed"] == true) {
-        hint(ui, t, "Detect Faces (Photo menu) needs it: a small one-time download.");
+        if cfg!(feature = "network") {
+            hint(ui, t, "Detect Faces (Photo menu) needs it: a small one-time download.");
+        } else {
+            // (a build without `network` downloads nothing: the model file is added by hand)
+            hint(ui, t, "Detect Faces (Photo menu) needs it: add its model file (Add a model file… below).");
+        }
     }
     heading(ui, t, "Recognition models");
     for m in all.iter().filter(|m| m["role"] == "embedder") {

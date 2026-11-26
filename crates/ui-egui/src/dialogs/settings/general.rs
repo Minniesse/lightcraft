@@ -129,11 +129,17 @@ fn lens_profiles(app: &mut LightcraftApp, ui: &mut egui::Ui, t: &Tokens) {
         crate::i18n::tr("Downloading the lens database…").to_string()
     } else if installed {
         crate::i18n::tr("The lens database is installed.").to_string()
+    } else if !cfg!(feature = "network") {
+        // (a build without `network` downloads nothing: no size, no button, no offer)
+        crate::i18n::tr("The lens database is not installed.").to_string()
     } else {
         crate::i18n::tr_format!("The lens database is not installed (about {size} MB).", size = lensfun_download::download_megabytes())
     };
     row(ui, t, crate::i18n::tr("Lens database"), |ui| {
         ui.label(RichText::new(status).color(t.text));
+        if !cfg!(feature = "network") {
+            return;
+        }
         let r = ui.add_enabled(!own && !running && !installed, egui::Button::new(crate::i18n::tr("Download Lens Database")));
         register(ui, "button:settingsLensDatabase", r.rect);
         if r.clicked()
@@ -142,6 +148,10 @@ fn lens_profiles(app: &mut LightcraftApp, ui: &mut egui::Ui, t: &Tokens) {
             app.toast(ui.ctx(), e);
         }
     });
+    if !cfg!(feature = "network") {
+        hint(ui, t, crate::i18n::tr("lensfun's open lens database (CC BY-SA 3.0) corrects distortion and vignetting for many lenses."));
+        return;
+    }
     let mut offer = app.ui.settings.lens_database != Offer::Declined;
     if check(ui, "settings.lensDatabaseOffer", &mut offer, "Offer the lens database download when LightCraft starts") {
         app.ui.settings.lens_database = if offer { Offer::Ask } else { Offer::Declined };

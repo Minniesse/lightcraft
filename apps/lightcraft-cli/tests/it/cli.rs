@@ -1221,3 +1221,15 @@ fn denoise_serve_runs_tiles_for_another_computer() {
     let _ = child.wait();
     let _ = std::fs::remove_dir_all(&models);
 }
+
+/// Without `network` (KatWork's build) `denoise-serve` is not a subcommand, and the help does not offer it.
+#[cfg(not(feature = "network"))]
+#[test]
+fn denoise_serve_is_neither_offered_nor_run_without_network() {
+    let help = Command::new(binary()).arg("--help").output().unwrap();
+    let help = String::from_utf8_lossy(&help.stdout);
+    assert!(help.contains("lightcraft-cli commands") && !help.contains("denoise-serve"), "{help}");
+    let out = Command::new(binary()).args(["denoise-serve", "--listen", "127.0.0.1:0"]).output().unwrap();
+    assert!(!out.status.success());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("unknown subcommand `denoise-serve`"), "{out:?}");
+}

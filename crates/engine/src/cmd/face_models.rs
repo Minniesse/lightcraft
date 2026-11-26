@@ -122,7 +122,7 @@ fn download_spec(s: &Session, id: &str) -> Option<known::Download> {
 
 fn row(s: &Session, m: &ModelManifest, installed: bool, selected: bool, accepted: &Value) -> Value {
     let from_catalog = s.face_catalog.entries.iter().any(|e| e.manifest.id == m.id);
-    json!({
+    let v = json!({
         "id": m.id,
         "name": m.name,
         "role": m.role,
@@ -143,7 +143,8 @@ fn row(s: &Session, m: &ModelManifest, installed: bool, selected: bool, accepted
         "installed": installed,
         "selected": selected,
         "accepted": accepted,
-    })
+    });
+    super::without_downloads(v, &["downloadHost"])
 }
 
 struct Inspection {
@@ -379,6 +380,7 @@ fn download(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"started": id, "from": host}))
 }
 
+#[cfg(feature = "network")]
 fn download_row(s: &Session, id: &str, state: &State) -> Value {
     let from = download_spec(s, id).map(|d| d.host().to_string());
     match state {
@@ -391,6 +393,7 @@ fn download_row(s: &Session, id: &str, state: &State) -> Value {
 }
 
 /// `faces.models.downloads`: where each download stands (a finished one is installed first).
+#[cfg(feature = "network")]
 fn downloads(s: &mut Session, _: &Value) -> Result<Value> {
     finish_downloads(s);
     let all: Vec<Value> = s.face_downloads.snapshot().iter().map(|(id, st)| download_row(s, id, st)).collect();
@@ -398,6 +401,7 @@ fn downloads(s: &mut Session, _: &Value) -> Result<Value> {
 }
 
 /// `faces.models.downloadCancel {id}`: stop a download, or clear a finished one (a staged file is deleted).
+#[cfg(feature = "network")]
 fn download_cancel(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "faces.models.downloadCancel";
     let id = str_param(p, "id").ok_or_else(|| bad(C, "missing `id`"))?;
@@ -529,8 +533,6 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!(query "faces.models.list", "Face Models", [], None, "{} → {dir, enabled, embedder, runtime, models: [{id, name, role, licence{name, commercial, url, notice}, provenance, source, sizeBytes, known, installed, selected}]}", always, list),
         cmd!(query "faces.models.inspect", "Inspect Face Model File", [], None, "{path} → what a .onnx file is: {kind: known | draft | unsupported, model, assumptions, reason, alreadyInstalled}; installs nothing", always, inspect),
         cmd!(query "faces.models.install", "Install Face Model", [], None, "{path, acknowledged: true, activate?: true} → {installed, active: {embedder, enabled}} — copy a .onnx face recognition model into the models folder. `acknowledged` must be true: the user has been shown its licence (see inspect) and accepted it. Unless `activate` is false the model becomes the one in use and recognition is switched on; an earlier model stays installed", always, install),
-        cmd!(query "faces.models.downloads", "Face Model Downloads", [], None, "{} → {running, downloads: [{id, state: running | done | installed | failed | cancelled, bytes, total, error, from}]} — also installs any download that has arrived; `installed` stays listed until `faces.models.downloadCancel` clears it", always, downloads),
-        cmd!(query "faces.models.downloadCancel", "Cancel Face Model Download", [], None, "{id} → {discarded} — stop a download, or delete a finished one that was not installed", always, download_cancel),
         cmd!(query "faces.models.test", "Test Face Model", [], None, "{id} → {ok, result: {loadMs, embedMs, dimension, checks}} — load an installed recognition model and check it gives sensible faces; needs the recognition runtime", always, test),
         cmd!(query "faces.models.remove", "Remove Face Model", [], None, "{id} — delete an installed model", always, remove),
         cmd!(query "faces.models.select", "Choose Face Recognition Model", [], None, "{id: installed recogniser | null}", always, select),
@@ -540,6 +542,8 @@ pub fn specs() -> Vec<CommandSpec> {
     #[cfg(feature = "network")]
     let v: Vec<CommandSpec> = v.into_iter().chain([
             cmd!(query "faces.models.download", "Download Face Model", [], None, "{id, acknowledged: true} → {started, from} — fetch a recognition model LightCraft has a pinned address for (see `downloadHost` in the list), in the background over pure-Rust https (lightcraft-fetch). `acknowledged` must be true: the user has been shown the model's terms and accepted them. It is checked against its size and SHA-256, then installed, chosen and switched on by itself; `faces.models.downloads` shows how far it is", always, download),
+        cmd!(query "faces.models.downloads", "Face Model Downloads", [], None, "{} → {running, downloads: [{id, state: running | done | installed | failed | cancelled, bytes, total, error, from}]} — also installs any download that has arrived; `installed` stays listed until `faces.models.downloadCancel` clears it", always, downloads),
+        cmd!(query "faces.models.downloadCancel", "Cancel Face Model Download", [], None, "{id} → {discarded} — stop a download, or delete a finished one that was not installed", always, download_cancel),
     ]).collect();
     v
 }

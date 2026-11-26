@@ -1305,6 +1305,7 @@ fn ui_commands_10(app: &mut LightcraftApp, ctx: &egui::Context, id: &str, p: &Va
             app.ui.dialog = Some(Dialog::About);
             Ok(Value::Null)
         }
+        #[cfg(feature = "self-update")]
         "app.checkForUpdates" => crate::updates_ui::check(app),
         "photo.editInPhotoCraft" => edit_in(app, ctx, p, true),
         "photo.editInExternal" => edit_in(app, ctx, p, false),

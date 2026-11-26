@@ -205,8 +205,9 @@ pub fn fetch_on_start(auto: bool, offer: Offer) -> Start {
 
 /// [`fetch_on_start`] without the file system: `own` (`LIGHTCRAFT_LENSFUN_DIR` is set), the app's folder `dir` and
 /// whether it holds the pinned data.
+/// A build without the `network` feature never asks or downloads.
 pub fn decide(auto: bool, own: bool, dir: Option<PathBuf>, installed: bool, offer: Offer) -> Start {
-    let Some(dir) = dir.filter(|_| auto && !own && !installed) else { return Start::Nothing };
+    let Some(dir) = dir.filter(|_| cfg!(feature = "network") && auto && !own && !installed) else { return Start::Nothing };
     match offer {
         Offer::Ask => Start::Ask(dir),
         Offer::Accepted => Start::Fetch(dir),

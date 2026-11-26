@@ -1,5 +1,5 @@
-//! Software updates, background check at startup, and startup prompt modal (the `self-update` feature; without
-//! it, as in the web build, a requested check only says it is not available).
+//! Software updates, background check at startup, and startup prompt modal (the `self-update` feature; without it
+//! there is no Check for Updates and nothing here runs).
 
 use serde_json::Value;
 
@@ -77,6 +77,7 @@ pub(crate) fn blocks_input(app: &LightcraftApp) -> bool {
     }
 }
 
+#[cfg(feature = "self-update")]
 pub(crate) fn check(app: &mut LightcraftApp) -> Result<Value, String> {
     #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     {
@@ -86,17 +87,10 @@ pub(crate) fn check(app: &mut LightcraftApp) -> Result<Value, String> {
         }
         Ok(Value::Null)
     }
-    #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
+    #[cfg(target_arch = "wasm32")]
     {
         app.updates_rt.manual_window_open = true;
-        app.updates_rt.status_message = Some(
-            if cfg!(target_arch = "wasm32") {
-                "Update check is not supported in the web browser."
-            } else {
-                "Update check is not available in this build."
-            }
-            .into(),
-        );
+        app.updates_rt.status_message = Some("Update check is not supported in the web browser.".into());
         Ok(Value::Null)
     }
 }

@@ -67,6 +67,9 @@ mod keywording;
 mod labels;
 mod launch_library;
 mod layout_image;
+// (compiled only in a build that leaves a feature out)
+#[cfg(any(not(feature = "network"), not(feature = "self-update")))]
+mod katwork_profile;
 mod lens_lookup;
 mod lens_offer;
 mod library_problem;

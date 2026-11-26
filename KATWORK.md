@@ -17,6 +17,7 @@ Based on LightCraft by the ArtCraft team (https://github.com/storytold/lightcraf
 | `chore(katwork): remove the ArtCraft marks` | not proposed upstream (the brand terms let a fork that proposes changes keep the marks; this one is a distributed modified version) |
 | `feat(katwork): network feature, on by default` | draft, not opened (in the fork PR body) |
 | `feat(katwork): self-update feature, on by default` | draft, not opened (in the fork PR body) |
+| `feat(katwork): hide the UI of compiled-out features` | draft, not opened (in the fork PR body) |
 
 ## The KatWork build
 
@@ -27,15 +28,21 @@ is unchanged, are then off:
 - `network` (in `lightcraft-engine`, `lightcraft-segment` and `lightcraft-denoise`, forwarded by `lightcraft-mcp`,
   `lightcraft-ui-egui`, the CLI, the web crate and the desktop app): `lightcraft-fetch` (rustls, webpki-roots) leaves
   the build. The commands that start a download are unknown: `denoise.models.download`, `faces.models.download`,
-  `segment.model.download`, `metadata.downloadPlaceNames` and `lens.downloadDatabase`; their status and cancel
-  commands stay and report nothing running. The remote denoise client (`LIGHTCRAFT_DENOISE_URL`), the
-  `denoise-serve` subcommand (unknown) and the SAM 3 remote worker's client and server are compiled out.
+  `segment.model.download`, `metadata.downloadPlaceNames` and `lens.downloadDatabase`, and so are the commands that
+  only watch or stop a download (`denoise.models.downloadCancel`, `faces.models.downloads`,
+  `faces.models.downloadCancel`, `segment.model.cancel`); `denoise.models.downloads` stays because it also reports
+  installs from a file. No result carries download fields (`downloadHost`, `from`, the SAM 3 and lens download status,
+  the place-names download state), so the panels show no Download button; the lens database is never offered and
+  Settings has no download button or offer for it; command texts and messages that pointed to a download say how to
+  install instead. The remote denoise client (`LIGHTCRAFT_DENOISE_URL`), the
+  `denoise-serve` subcommand (unknown, and gone from `--help`) and the SAM 3 remote worker's client and server are compiled out.
 - `self-update` (in `lightcraft-ui-egui`, forwarded by the CLI, the web crate and the desktop app): `craft-update`
-  (ureq, rustls) leaves the build; Check for Updates says it is not available.
+  (ureq, rustls) leaves the build, and so does Check for Updates (menu item and UI command).
 
 `denoise` stays on (the engine behaves like upstream apart from the network); `rawnind-model`, `heif` and `dhat-heap`
 stay off (none is a default). `scripts/katwork-profile.sh` (CI job `katwork-profile`) checks the graphs and runs
-`crates/engine/tests/katwork_profile.rs` with the gate off. The KatWork lock check must refuse `network` and
+`crates/engine/tests/katwork_profile.rs` with the gate off; `crates/ui-egui/src/tests/katwork_profile.rs` checks the UI
+with both features off. The KatWork lock check must refuse `network` and
 `self-update` in its `features` and `web_features` columns.
 
 ## The marks

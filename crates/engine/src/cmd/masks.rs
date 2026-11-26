@@ -585,7 +585,7 @@ pub fn specs() -> Vec<CommandSpec> {
             super::always,
             |s, _| {
                 let g = &s.segmenter;
-                Ok(json!({
+                let v = json!({
                     "available": crate::segment::Segmenter::AVAILABLE,
                     "installed": g.installed(),
                     "dir": g.dir.as_ref().map(|d| d.display().to_string()),
@@ -598,17 +598,9 @@ pub fn specs() -> Vec<CommandSpec> {
                     "licenseUrl": crate::segment::LICENSE_URL,
                     "mirrors": g.mirrors().len(),
                     "download": g.download_status(),
-                }))
+                });
+                Ok(super::without_downloads(v, &["remote", "mirrors", "download"]))
             }
-        ),
-        cmd!(
-            query "segment.model.cancel",
-            "Cancel AI Mask Model Download",
-            [],
-            None,
-            "{} — stop the SAM 3 download (what has arrived is kept, and a new download resumes from it) → {cancelled}",
-            super::always,
-            |s, _| Ok(json!({"cancelled": s.segmenter.cancel_download()}))
         ),
         cmd!(
             "mask.refine",
@@ -1103,6 +1095,15 @@ pub fn specs() -> Vec<CommandSpec> {
                     Ok(json!({"started": started, "installed": s.segmenter.installed(), "downloading": s.segmenter.download_status().running}))
                 }
             ),
+        cmd!(
+            query "segment.model.cancel",
+            "Cancel AI Mask Model Download",
+            [],
+            None,
+            "{} — stop the SAM 3 download (what has arrived is kept, and a new download resumes from it) → {cancelled}",
+            super::always,
+            |s, _| Ok(json!({"cancelled": s.segmenter.cancel_download()}))
+        ),
     ]).collect();
     v
 }

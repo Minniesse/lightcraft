@@ -103,10 +103,11 @@ fn status(s: &mut Session, p: &Value) -> Result<Value> {
         Some(DownloadOutcome::Failed(e)) => (json!("failed"), json!(e)),
         Some(DownloadOutcome::Cancelled) => (json!("cancelled"), Value::Null),
     };
-    Ok(json!({
+    let v = json!({
         "downloaded": size.is_some(), "bytes": size, "path": dir, "downloading": sh.running, "lastDownload": last, "lastError": error,
         "attribution": GEONAMES_ATTRIBUTION, "source": lightcraft_geocode::GEONAMES_BASE,
-    }))
+    });
+    Ok(super::without_downloads(v, &["downloading", "lastDownload", "lastError"]))
 }
 
 /// Which place fields to write: a field is filled when it is empty, or always with `overwrite`.
@@ -145,7 +146,12 @@ fn reverse(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(C, "none of these photos has a GPS position"));
     }
     let dir = dataset_dir(p).ok_or_else(|| bad(C, "no settings folder: give `dataset`"))?;
-    let names = s.place_names.load(&dir).map_err(|e| bad(C, format!("{e}: download the place names first (Photo ▸ Download Place Names)")))?;
+    let how = if cfg!(feature = "network") {
+        "download the place names first (Photo ▸ Download Place Names)".to_string()
+    } else {
+        format!("this build does not download the place names: put GeoNames' {} in {}", GEONAMES_FILES[0], dir.display())
+    };
+    let names = s.place_names.load(&dir).map_err(|e| bad(C, format!("{e}: {how}")))?;
     // a large selection shows in the activity stack and can be stopped
     let task = (todo.len() > 1).then(|| s.activity.start("geocode", "Looking up places", Cancel::Yes));
     let mut ops = Vec::new();

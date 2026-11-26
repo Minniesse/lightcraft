@@ -177,7 +177,8 @@ fn status(s: &mut Session, _: &Value) -> Result<Value> {
     };
     let dir = crate::lens_profiles::dir();
     let lenses = crate::lens_profiles::database().map_or(0, |db| db.lenses.len());
-    Ok(json!({"download": state, "dir": dir.map(|d| d.to_string_lossy().to_string()), "lenses": lenses}))
+    let v = json!({"download": state, "dir": dir.map(|d| d.to_string_lossy().to_string()), "lenses": lenses});
+    Ok(super::without_downloads(v, &["download"]))
 }
 
 pub fn specs() -> Vec<CommandSpec> {

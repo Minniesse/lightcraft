@@ -270,6 +270,8 @@ impl Segmenter {
         let msg = if d.running {
             let pct = d.done.saturating_mul(100).checked_div(d.total).unwrap_or(0);
             format!("{NOT_INSTALLED} yet: it is downloading ({pct} %).")
+        } else if !cfg!(feature = "network") {
+            format!("{NOT_INSTALLED}. Put model.safetensors, vocab.json and merges.txt in {}.", dir.display())
         } else {
             format!(
                 "{NOT_INSTALLED}. Download it (about {:.1} GB, {LICENSE_NAME}) when LightCraft offers it, with `segment.model.download {{\"acknowledged\": true}}`, or put model.safetensors, vocab.json and merges.txt in {}.",
