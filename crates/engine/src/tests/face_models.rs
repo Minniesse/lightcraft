@@ -247,6 +247,7 @@ fn the_detector_and_the_recognisers_can_be_downloaded_and_the_download_is_refuse
     let _ = std::fs::remove_dir_all(&d);
 }
 
+#[cfg(feature = "network")]
 #[test]
 fn a_download_that_has_arrived_is_installed_by_itself_and_its_staged_file_goes() {
     let d = temp("dl-arrived");
@@ -508,6 +509,7 @@ fn installing_a_model_chooses_it_and_switches_recognition_on() {
     let _ = std::fs::remove_dir_all(&d);
 }
 
+#[cfg(feature = "network")]
 #[test]
 fn a_download_that_arrives_is_installed_and_switched_on_by_itself() {
     use crate::face_download::{STAGING, State};

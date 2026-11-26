@@ -1,6 +1,7 @@
 //! Software updates, background check at startup, and startup prompt modal (the `self-update` feature; without it
 //! there is no Check for Updates and nothing here runs).
 
+#[cfg(feature = "self-update")]
 use serde_json::Value;
 
 use crate::LightcraftApp;

@@ -107,7 +107,7 @@ impl Downloads {
     }
 
     /// A download that has arrived and been checked, as if the transfer had just ended (tests of installing).
-    #[cfg(test)]
+    #[cfg(all(test, feature = "network"))]
     pub(crate) fn arrived(&mut self, id: &str, path: PathBuf, sha256: &str) {
         let j = Shared::new(0);
         j.set(State::Done { path, sha256: sha256.to_string() });
