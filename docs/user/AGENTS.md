@@ -1,13 +1,13 @@
 # User docs: rules for agents and contributors
 
-Everything in this folder (except this file, CLAUDE.md and README.md) is published at
-https://getartcraft.com/docs/lightcraft. The file path is the URL:
+Everything in this folder (except this file, CLAUDE.md and README.md) is published upstream
+as LightCraft's user documentation. The file path is the page's URL path:
 `troubleshooting/raw-photos-look-dull.md` → `/docs/lightcraft/troubleshooting/raw-photos-look-dull`.
 Renaming a file breaks links, so add the old path to `redirect_from` when you rename.
 
 ## Who reads this
 
-Artists and photographers using LightCraft, Discord mods answering them, and AI assistants looking
+Artists and photographers using LightCraft, people answering them, and AI assistants looking
 things up for either. Write for a photographer, not a developer.
 
 ## Page rules
@@ -18,10 +18,10 @@ things up for either. Write for a photographer, not a developer.
 - Link to other pages instead of repeating them. Use relative links to the `.md` file:
   `[Install LightCraft](../getting-started/install.md)`.
 - No marketing copy, no "simply", no claims you have not checked in the code or a release.
-- Call the product "LightCraft", as the app, its downloads and getartcraft.com do.
+- Call the product "LightCraft", as the app and its downloads do.
 - Name UI labels exactly as the app shows them, in **bold**.
 - Troubleshooting pages: `## Symptoms`, `## Fix`, `## Why this happens` (optional),
-  `## Still stuck?` (link the issue tracker or Discord).
+  `## Still stuck?` (link the issue tracker).
 
 ## Frontmatter
 
@@ -50,9 +50,7 @@ drafts and are not published.
 
 ## Check before you push
 
-    node <path to your artcraft-services checkout>/frontend/apps/artcraft-website-next/scripts/docs/core.mjs docs/user
-
-The checker lives in storytold/artcraft-services. A CI check will be added once it is on that repo's main branch.
+Upstream checks these pages with the checker of its website repository before it publishes them.
 
 ## Support PRs
 

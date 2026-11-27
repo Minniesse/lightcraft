@@ -31,7 +31,7 @@ fn models_dir(s: &Session, cmd: &str) -> Result<PathBuf> {
 
 /// What a command says about a model.
 fn row(m: &DenoiserManifest, download_host: Option<String>, installed: bool, selected: bool, accepted: &Value) -> Value {
-    json!({
+    let v = json!({
         "id": m.id,
         "name": m.name,
         "version": m.version,
@@ -47,7 +47,8 @@ fn row(m: &DenoiserManifest, download_host: Option<String>, installed: bool, sel
         "installed": installed,
         "selected": selected,
         "accepted": accepted,
-    })
+    });
+    super::without_downloads(v, &["downloadHost"])
 }
 
 fn host_of(k: &Known) -> Option<String> {
@@ -123,10 +124,14 @@ fn identify(path: &Path, c: &str, sha_known: Option<&str>) -> Result<Source> {
         }
         return Ok(Source { manifest: m, entry: None, file_name });
     }
+    let archive =
+        if cfg!(feature = "network") { "an archive LightCraft can fetch itself (`denoise.models.download`)" } else { "an archive LightCraft knows" };
     Err(bad(
         c,
-        "LightCraft does not know this file. A denoise model is an .onnx file with a denoise-model.json beside it that says how to use it \
-         (see docs/denoise.md), or an archive LightCraft can fetch itself (`denoise.models.download`)",
+        format!(
+            "LightCraft does not know this file. A denoise model is an .onnx file with a denoise-model.json beside it that says how to use it \
+             (see docs/denoise.md), or {archive}"
+        ),
     ))
 }
 
@@ -376,6 +381,7 @@ pub(crate) fn finish_downloads(s: &mut Session) {
     }
 }
 
+#[cfg(feature = "network")]
 fn download(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "denoise.models.download";
     let id = str_param(p, "id").ok_or_else(|| bad(C, "missing `id`"))?;
@@ -401,14 +407,15 @@ fn download(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn download_row(id: &str, state: &State) -> Value {
     let from = known::find(id).and_then(|k| host_of(&k));
-    match state {
+    let v = match state {
         State::Running { bytes, total } => json!({"id": id, "state": "running", "bytes": bytes, "total": total, "from": from}),
         State::Done { path, .. } => json!({"id": id, "state": "done", "path": path.display().to_string(), "from": from}),
         State::Installing => json!({"id": id, "state": "installing", "from": from}),
         State::Installed => json!({"id": id, "state": "installed", "from": from}),
         State::Failed(why) => json!({"id": id, "state": "failed", "error": why, "from": from}),
         State::Cancelled => json!({"id": id, "state": "cancelled", "from": from}),
-    }
+    };
+    super::without_downloads(v, &["from"])
 }
 
 fn downloads(s: &mut Session, _: &Value) -> Result<Value> {
@@ -417,6 +424,7 @@ fn downloads(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(json!({"running": s.denoise.downloads.running(), "downloads": all}))
 }
 
+#[cfg(feature = "network")]
 fn download_cancel(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "denoise.models.downloadCancel";
     let id = str_param(p, "id").ok_or_else(|| bad(C, "missing `id`"))?;
@@ -601,7 +609,8 @@ fn queue(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "denoise.queue";
     s.denoise_refresh_active(true);
     if s.denoise.active.is_none() {
-        return Err(bad(C, "no denoise model is chosen: install one first (`denoise.models.download` or `denoise.models.install`)"));
+        let how = if cfg!(feature = "network") { "`denoise.models.download` or `denoise.models.install`" } else { "`denoise.models.install`" };
+        return Err(bad(C, format!("no denoise model is chosen: install one first ({how})")));
     }
     if s.denoise_products_dir().is_none() {
         return Err(bad(C, "denoise keeps its pictures in the library's folder: open a library on disk first"));
@@ -654,13 +663,11 @@ fn clear(s: &mut Session, _: &Value) -> Result<Value> {
 }
 
 pub fn specs() -> Vec<CommandSpec> {
-    vec![
+    let v = vec![
         cmd!(query "denoise.models.list", "Denoise Models", [], None, "{} → {dir, productsDir, model, runtime, auto, cacheGb, threads, runOn, models: [{id, name, version, licence{name, commercial, url, notice}, provenance, source, sizeBytes, sha256, tile, known, downloadHost, installed, selected, accepted}]}", always, list),
         cmd!(query "denoise.models.inspect", "Inspect Denoise Model", [], None, "{path} → model terms from an adjacent manifest; never executes the file", always, inspect),
         cmd!(query "denoise.models.install", "Install Denoise Model", [], None, "{path, acknowledged: true, activate?: true, background?: false} → {installed, model} or {started} — install a denoise model from a file: an .onnx with a denoise-model.json beside it, or an archive LightCraft knows (the darktable `.dtmodel`). `acknowledged` must be true: the user has been shown the model's licence and accepted it. Unless `activate` is false it becomes the model in use", always, install),
-        cmd!(query "denoise.models.download", "Download Denoise Model", [], None, "{id, acknowledged: true} → {started, from} — fetch a model LightCraft has a pinned address for (see `downloadHost` in the list) in the background over HTTPS with lightcraft-fetch. `acknowledged` must be true: the user has been shown the model's terms and accepted them. It is checked against its size and SHA-256, installed and chosen by itself; `denoise.models.downloads` shows how far it is", always, download),
         cmd!(query "denoise.models.downloads", "Denoise Model Downloads", [], None, "{} → {running, downloads: [{id, state: running | done | installed | failed | cancelled, bytes, total, error, from}]} — also installs any download that has arrived", always, downloads),
-        cmd!(query "denoise.models.downloadCancel", "Cancel Denoise Model Download", [], None, "{id} → {discarded} — stop a download, or delete a finished one that was not installed", always, download_cancel),
         cmd!(query "denoise.models.test", "Test Denoise Model", [], None, "{id} → {ok, result} — load an installed model and check it gives sensible pictures; needs the denoise runtime", always, test),
         cmd!(query "denoise.models.remove", "Remove Denoise Model", [], None, "{id} → {removed, model} — delete an installed model (its cached pictures stay until they are evicted)", always, remove),
         cmd!(query "denoise.models.select", "Choose Denoise Model", [], None, "{id: installed model | null} → {model} — null uses the built-in denoiser", always, select),
@@ -679,5 +686,12 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!(query "denoise.status", "Denoise Status", [], None, "{id?} → {enabled, model, runtime, productsDir, queued, running: {photo, done, total, seconds} | null, ready, made, auto, runOn, device: {kind: gpu | cpu | pending | none, adapter?, reason?, cardMs?, cpuMs?, fellBack?, remote?: {address, state: pending | unavailable | used | idle | slower | given up, device?, remoteMs?, localMs?, reason?, failures?, lastError?}}, cache: {files, bytes, limitBytes}, generation, photo?: {state: notApplicable | ready | queued | running | failed | idle, …}}", always, status),
         cmd!(query "denoise.pump", "Denoise Pump", [], None, "{pace?: pause | light | normal | full} → {active, running, queued, ready, generation, downloading} — called every frame by the app: takes in finished work and keeps one photo going", always, pump),
         cmd!(query "denoise.clear", "Clear Denoise Cache", [], None, "{} → {deleted, bytes} — delete every cached denoised picture of this library (they are made again when wanted)", always, clear),
-    ]
+    ];
+    // downloads reach another computer
+    #[cfg(feature = "network")]
+    let v: Vec<CommandSpec> = v.into_iter().chain([
+            cmd!(query "denoise.models.download", "Download Denoise Model", [], None, "{id, acknowledged: true} → {started, from} — fetch a model LightCraft has a pinned address for (see `downloadHost` in the list) in the background over HTTPS with lightcraft-fetch. `acknowledged` must be true: the user has been shown the model's terms and accepted them. It is checked against its size and SHA-256, installed and chosen by itself; `denoise.models.downloads` shows how far it is", always, download),
+        cmd!(query "denoise.models.downloadCancel", "Cancel Denoise Model Download", [], None, "{id} → {discarded} — stop a download, or delete a finished one that was not installed", always, download_cancel),
+    ]).collect();
+    v
 }

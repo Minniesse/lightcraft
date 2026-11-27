@@ -183,8 +183,24 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(face_recognize::specs());
         v.extend(focus::specs());
         v.extend(activity::specs());
+        // a build without `network` downloads no model: the texts that say to download one say to install it
+        #[cfg(not(feature = "network"))]
+        for c in &mut v {
+            if c.params.contains("faces.models.download") {
+                // (once per process: this list is built once)
+                c.params = Box::leak(offline_params(c.params).into_boxed_str());
+            }
+        }
         v
     })
+}
+
+/// `params` without its pointers to `faces.models.download` (see [`command_specs`]).
+#[cfg(not(feature = "network"))]
+fn offline_params(params: &str) -> String {
+    params
+        .replace("download it first: `faces.models.download {id: \"yunet-2023mar\"}`", "install it first with `faces.models.install`")
+        .replace("`faces.models.download {id: \"yunet-2023mar\"}`", "`faces.models.install`")
 }
 
 pub fn find_command(id: &str) -> Option<&'static CommandSpec> {
@@ -236,6 +252,19 @@ pub(crate) fn photo_id(p: &Value, cmd: &str) -> Result<Option<lightcraft_catalog
         None | Some(Value::Null) => Ok(None),
         Some(v) => v.as_u64().map(|n| Some(lightcraft_catalog::PhotoId(n))).ok_or_else(|| bad(cmd, "`id` must be a photo id (a whole number)")),
     }
+}
+
+/// A result without the fields that only describe downloads (`keys`), in a build without the `network` feature:
+/// nothing there is downloaded, so no panel offers it.
+pub(crate) fn without_downloads(mut v: Value, keys: &[&str]) -> Value {
+    if !cfg!(feature = "network")
+        && let Some(o) = v.as_object_mut()
+    {
+        for k in keys {
+            o.remove(*k);
+        }
+    }
+    v
 }
 
 pub(crate) fn bad(cmd: &str, msg: impl Into<String>) -> EngineError {

@@ -40,7 +40,7 @@ các ngôn ngữ khác.
 | Shutter Speed | Tốc độ màn trập |
 | Smart Previews | Xem trước thông minh |
 
-Tên sản phẩm và chuẩn giữ nguyên khi là định danh: LightCraft, ArtCraft, GitHub, Discord,
+Tên sản phẩm và chuẩn giữ nguyên khi là định danh: LightCraft, GitHub, Discord,
 JPEG, PNG, TIFF, WebP, AVIF, HEIF, HEIC, RAW, DNG, RGB, HDR, ICC, EXIF, XMP, GPU, MCP, SAM, ISO, OK.
 
 Tên album / preset / profile do người dùng tạo, tên tệp, command ID và metadata nhập tay

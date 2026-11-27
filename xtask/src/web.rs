@@ -99,8 +99,26 @@ fn check_bindgen(want: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// The Cargo feature flags of the build (`--no-default-features`, `--features <list>`), passed to its `cargo build`
+/// only, so a distributor can leave default features out of the web build as of the CLI.
+fn feature_args<'a>(args: &[&'a str]) -> Result<Vec<&'a str>, String> {
+    let mut out = Vec::new();
+    for (i, a) in args.iter().enumerate() {
+        match *a {
+            "--no-default-features" => out.push(*a),
+            "--features" => match args.get(i + 1) {
+                Some(list) if !list.starts_with("--") => out.extend(["--features", list]),
+                _ => return Err("--features needs a comma-separated list".into()),
+            },
+            _ => {}
+        }
+    }
+    Ok(out)
+}
+
 pub fn run(args: &[&str]) -> Result<(), String> {
     let dev = args.contains(&"--dev");
+    let features = feature_args(args)?;
     let serve = args.iter().position(|a| *a == "--serve").map(|i| args.get(i + 1).and_then(|p| p.parse::<u16>().ok()).unwrap_or(8080));
 
     let want = locked_bindgen_version()?;
@@ -110,8 +128,8 @@ pub fn run(args: &[&str]) -> Result<(), String> {
     let profile = if dev { "dev" } else { WEB_PROFILE };
 
     let mut c = cargo();
-    c.args(["build", "-p", "lightcraft-web", "--lib", "--target", TARGET, "--profile", profile]);
-    step(c, &format!("cargo build -p lightcraft-web --target {TARGET} --profile {profile}"))?;
+    c.args(["build", "-p", "lightcraft-web", "--lib", "--target", TARGET, "--profile", profile]).args(&features);
+    step(c, &format!("cargo build -p lightcraft-web --target {TARGET} --profile {profile} {}", features.join(" ")))?;
 
     let wasm = target_dir.join(TARGET).join(if dev { "debug" } else { profile }).join("lightcraft_web.wasm");
     let out = target_dir.join(SITE_DIR);
@@ -312,6 +330,15 @@ mod tests {
         for bad in ["../Cargo.toml", "a/../../x", "/etc/passwd", "C:/Windows/win.ini", "C:\\x", "a\\..\\b", "./x"] {
             assert!(!safe_site_path(bad), "{bad}");
         }
+    }
+
+    #[test]
+    fn only_the_feature_flags_reach_the_build() {
+        let args = ["--dev", "--no-default-features", "--serve", "9000", "--features", "heif"];
+        assert_eq!(feature_args(&args).unwrap(), ["--no-default-features", "--features", "heif"]);
+        assert!(feature_args(&["--dev"]).unwrap().is_empty());
+        assert!(feature_args(&["--features"]).is_err());
+        assert!(feature_args(&["--features", "--dev"]).is_err());
     }
 
     #[test]

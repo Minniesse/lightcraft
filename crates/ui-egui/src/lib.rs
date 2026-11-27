@@ -8,7 +8,7 @@
 
 /// LightCraft as craft-update knows it, with its 128 px icon and accent colour: the update
 /// prompt shows both, and an AppImage's menu entry gets the icon.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
 pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
     icon_png: Some(include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.lightcraft.png")),
     accent: Some([0xf2, 0xa5, 0x16]),

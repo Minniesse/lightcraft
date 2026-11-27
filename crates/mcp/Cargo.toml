@@ -8,6 +8,11 @@ description = "LightCraft MCP server (L5): JSON-RPC 2.0 over stdio, driving a ru
 [lints]
 workspace = true
 
+[features]
+default = ["network"]
+# The engine's downloads and remote clients (`lightcraft-engine/network`).
+network = ["lightcraft-engine/network"]
+
 [dependencies]
 craft-mime = { workspace = true }
 lightcraft-engine = { workspace = true }

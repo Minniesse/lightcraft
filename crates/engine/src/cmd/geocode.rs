@@ -49,7 +49,7 @@ pub struct PlaceNames {
     cache: Option<(PathBuf, u64, Option<SystemTime>, Arc<GeoNames>)>,
     /// (folder, server) a download goes to instead of `<settings>/geonames` and GeoNames. Only
     /// tests set it: no command can, so a client never chooses where the files land (#2575).
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     download_to: Option<(PathBuf, String)>,
 }
 
@@ -103,10 +103,11 @@ fn status(s: &mut Session, p: &Value) -> Result<Value> {
         Some(DownloadOutcome::Failed(e)) => (json!("failed"), json!(e)),
         Some(DownloadOutcome::Cancelled) => (json!("cancelled"), Value::Null),
     };
-    Ok(json!({
+    let v = json!({
         "downloaded": size.is_some(), "bytes": size, "path": dir, "downloading": sh.running, "lastDownload": last, "lastError": error,
         "attribution": GEONAMES_ATTRIBUTION, "source": lightcraft_geocode::GEONAMES_BASE,
-    }))
+    });
+    Ok(super::without_downloads(v, &["downloading", "lastDownload", "lastError"]))
 }
 
 /// Which place fields to write: a field is filled when it is empty, or always with `overwrite`.
@@ -145,7 +146,12 @@ fn reverse(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(C, "none of these photos has a GPS position"));
     }
     let dir = dataset_dir(p).ok_or_else(|| bad(C, "no settings folder: give `dataset`"))?;
-    let names = s.place_names.load(&dir).map_err(|e| bad(C, format!("{e}: download the place names first (Photo ▸ Download Place Names)")))?;
+    let how = if cfg!(feature = "network") {
+        "download the place names first (Photo ▸ Download Place Names)".to_string()
+    } else {
+        format!("this build does not download the place names: put GeoNames' {} in {}", GEONAMES_FILES[0], dir.display())
+    };
+    let names = s.place_names.load(&dir).map_err(|e| bad(C, format!("{e}: {how}")))?;
     // a large selection shows in the activity stack and can be stopped
     let task = (todo.len() > 1).then(|| s.activity.start("geocode", "Looking up places", Cancel::Yes));
     let mut ops = Vec::new();
@@ -184,7 +190,7 @@ fn reverse(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"looked": todo.len(), "found": found.len(), "changed": changed, "photos": found, "attribution": GEONAMES_ATTRIBUTION}))
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "network", not(target_arch = "wasm32")))]
 mod download {
     use std::path::Path;
     use std::sync::Arc;
@@ -319,7 +325,7 @@ pub fn specs() -> Vec<CommandSpec> {
         ),
         cmd!(query "metadata.placeNamesStatus", "Place Names Status", [], None, "{dataset?: folder} → {downloaded, bytes, path, attribution, source}", always, status),
     ];
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     v.push(cmd!(
         "metadata.downloadPlaceNames",
         "Download Place Names (GeoNames)",
@@ -448,7 +454,7 @@ mod tests {
 
     /// A local HTTP server; the first path segment picks the behaviour: `good` (the synthetic dump), `garbage` (a zip
     /// that isn't one), `short` (the body ends before its Content-Length), anything else 404.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     fn serve() -> String {
         use std::io::{BufRead, BufReader, Write};
         let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -482,7 +488,7 @@ mod tests {
         format!("http://127.0.0.1:{port}")
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     fn download(s: &mut Session, base: &str, dir: &Path) -> DownloadOutcome {
         s.place_names.download_to = Some((dir.to_path_buf(), base.to_string()));
         s.execute("metadata.downloadPlaceNames", &json!({})).unwrap();
@@ -502,7 +508,7 @@ mod tests {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     #[test]
     fn download_end_to_end_and_its_failures() {
         let mut s = Session::with_demo();
@@ -537,7 +543,7 @@ mod tests {
     /// Issue #2575: a control or MCP client named the folder (`dataset`) and the server (`base`),
     /// so it could have a server's bytes written as `cities15000.txt`, `admin1CodesASCII.txt` and
     /// `countryInfo.txt` into any folder. Both are refused now, before anything starts.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     #[test]
     fn a_client_cannot_choose_where_the_place_names_download_to() {
         let mut s = Session::with_demo();
@@ -553,7 +559,7 @@ mod tests {
 
     /// The downloaded files replace what is there by renaming a complete temp file over it, so a
     /// link planted under one of their names is replaced, not followed to the file it points at.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "network", not(target_arch = "wasm32")))]
     #[test]
     fn a_download_replaces_a_planted_link_instead_of_writing_through_it() {
         let mut s = Session::with_demo();
@@ -581,6 +587,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&root);
     }
 
+    #[cfg(feature = "network")]
     #[test]
     fn download_base_is_https_or_loopback_only() {
         assert!(download::base_allowed("https://download.geonames.org/export/dump/"));

@@ -15,7 +15,7 @@
 //! commands return at once and [`Session::segment_poll`] applies the results; without it (CLI,
 //! MCP, tests) they wait for the worker.
 
-#[cfg(feature = "sam")]
+#[cfg(all(feature = "sam", feature = "network"))]
 mod download;
 #[cfg(feature = "sam")]
 mod worker;
@@ -133,7 +133,7 @@ pub struct Segmenter {
     messages: Vec<String>,
     #[cfg(feature = "sam")]
     worker: worker::Worker,
-    #[cfg(feature = "sam")]
+    #[cfg(all(feature = "sam", feature = "network"))]
     download: download::Downloader,
     #[cfg(feature = "sam")]
     results: (std::sync::mpsc::Sender<worker::Outcome>, std::sync::mpsc::Receiver<worker::Outcome>),
@@ -151,7 +151,7 @@ impl Default for Segmenter {
             messages: Vec::new(),
             #[cfg(feature = "sam")]
             worker: worker::Worker::default(),
-            #[cfg(feature = "sam")]
+            #[cfg(all(feature = "sam", feature = "network"))]
             download: download::Downloader::default(),
             #[cfg(feature = "sam")]
             results: std::sync::mpsc::channel(),
@@ -218,7 +218,7 @@ impl Segmenter {
 
     /// The model download's state.
     pub fn download_status(&self) -> DownloadStatus {
-        #[cfg(feature = "sam")]
+        #[cfg(all(feature = "sam", feature = "network"))]
         {
             let s = self.download.status();
             DownloadStatus {
@@ -231,18 +231,18 @@ impl Segmenter {
                 finished: s.finished,
             }
         }
-        #[cfg(not(feature = "sam"))]
+        #[cfg(not(all(feature = "sam", feature = "network")))]
         DownloadStatus::default()
     }
 
     /// Where the model is downloaded from, in order (the user's mirrors first).
     pub fn mirrors(&self) -> Vec<String> {
-        #[cfg(feature = "sam")]
+        #[cfg(all(feature = "sam", feature = "network"))]
         {
             let env = std::env::var(lightcraft_segment::fetch::MIRRORS_ENV).ok();
             lightcraft_segment::fetch::mirrors(env.as_deref(), self.mirrors_file.as_deref())
         }
-        #[cfg(not(feature = "sam"))]
+        #[cfg(not(all(feature = "sam", feature = "network")))]
         Vec::new()
     }
 
@@ -270,6 +270,8 @@ impl Segmenter {
         let msg = if d.running {
             let pct = d.done.saturating_mul(100).checked_div(d.total).unwrap_or(0);
             format!("{NOT_INSTALLED} yet: it is downloading ({pct} %).")
+        } else if !cfg!(feature = "network") {
+            format!("{NOT_INSTALLED}. Put model.safetensors, vocab.json and merges.txt in {}.", dir.display())
         } else {
             format!(
                 "{NOT_INSTALLED}. Download it (about {:.1} GB, {LICENSE_NAME}) when LightCraft offers it, with `segment.model.download {{\"acknowledged\": true}}`, or put model.safetensors, vocab.json and merges.txt in {}.",
@@ -290,7 +292,7 @@ impl Segmenter {
         if self.installed() {
             return Ok(false);
         }
-        #[cfg(feature = "sam")]
+        #[cfg(all(feature = "sam", feature = "network"))]
         {
             let mirrors = self.mirrors();
             if mirrors.is_empty() {
@@ -298,7 +300,7 @@ impl Segmenter {
             }
             self.download.start(lightcraft_segment::fetch::SAM3_FILES, mirrors, dir, lightcraft_segment::fetch::options(), activity, "SAM 3")
         }
-        #[cfg(not(feature = "sam"))]
+        #[cfg(not(all(feature = "sam", feature = "network")))]
         {
             let _ = (dir, activity);
             Ok(false)
@@ -307,9 +309,9 @@ impl Segmenter {
 
     /// Stop a running download (its partial files stay, to resume). False when none runs.
     pub fn cancel_download(&self) -> bool {
-        #[cfg(feature = "sam")]
+        #[cfg(all(feature = "sam", feature = "network"))]
         return self.download.cancel();
-        #[cfg(not(feature = "sam"))]
+        #[cfg(not(all(feature = "sam", feature = "network")))]
         false
     }
 }

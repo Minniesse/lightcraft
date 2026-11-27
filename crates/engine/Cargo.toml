@@ -49,15 +49,20 @@ unicode-normalization = "0.1"
 unicode-segmentation = "1.13"
 lightcraft-segment = { workspace = true, optional = true }
 
-# model downloads run natively only (the web build fetches no models)
+# model downloads run natively only (the web build fetches no models), and only with `network`
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-lightcraft-fetch = { workspace = true }
+lightcraft-fetch = { workspace = true, optional = true }
 # capture-time parsing for face recognition (native only)
 chrono = { workspace = true }
 # free space of the drive holding the preview cache (the low-disk alert; pure Rust: rustix / windows-sys)
 fs4 = { workspace = true }
 
 [features]
+default = ["network"]
+# Everything that reaches another computer: the HTTPS model and data downloads (denoise, face and SAM 3 models, the
+# lens database, the place names), the remote denoise client and the SAM 3 remote worker. Off: those commands are
+# unknown and nothing opens a connection.
+network = ["dep:lightcraft-fetch", "lightcraft-denoise?/network", "lightcraft-segment?/network"]
 # AI masks with SAM 3 (Object / Describe). Off for the web and CLI builds.
 sam = ["dep:lightcraft-segment"]
 denoise = ["dep:lightcraft-denoise", "lightcraft-denoise/runtime", "lightcraft-gpu/denoise"]

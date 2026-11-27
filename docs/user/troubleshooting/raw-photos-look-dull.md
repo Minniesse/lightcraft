@@ -37,4 +37,4 @@ If a large raw looks soft right after you zoom in, wait a few seconds. LightCraf
 
 ## Still stuck?
 
-Ask in [Discord](https://discord.gg/artcraft) or open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).
+Open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).

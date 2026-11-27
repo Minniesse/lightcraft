@@ -30,4 +30,4 @@ Photos shown from the preview keep the camera's picture style and white balance,
 
 ## Still stuck?
 
-Ask in [Discord](https://discord.gg/artcraft) or open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).
+Open an issue in the [issue tracker](https://github.com/storytold/lightcraft/issues).

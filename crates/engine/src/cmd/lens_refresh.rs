@@ -141,6 +141,7 @@ fn refresh(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"checked": n, "found": found.iter().map(|i| i.0).collect::<Vec<_>>(), "database": true}))
 }
 
+#[cfg(feature = "network")]
 fn download(s: &mut Session, _: &Value) -> Result<Value> {
     const C: &str = "lens.downloadDatabase";
     let dir = crate::lensfun_download::default_dir().ok_or_else(|| bad(C, "this session has no data folder"))?;
@@ -176,11 +177,12 @@ fn status(s: &mut Session, _: &Value) -> Result<Value> {
     };
     let dir = crate::lens_profiles::dir();
     let lenses = crate::lens_profiles::database().map_or(0, |db| db.lenses.len());
-    Ok(json!({"download": state, "dir": dir.map(|d| d.to_string_lossy().to_string()), "lenses": lenses}))
+    let v = json!({"download": state, "dir": dir.map(|d| d.to_string_lossy().to_string()), "lenses": lenses});
+    Ok(super::without_downloads(v, &["download"]))
 }
 
 pub fn specs() -> Vec<CommandSpec> {
-    vec![
+    let v = vec![
         cmd!(
             "library.refreshLensProfiles",
             "Look Up Lens Profiles Again",
@@ -191,15 +193,6 @@ pub fn specs() -> Vec<CommandSpec> {
             refresh
         ),
         cmd!(
-            "lens.downloadDatabase",
-            "Download the Lens Database",
-            [],
-            None,
-            "{} — fetch lensfun's lens database (CC BY-SA 3.0, pinned to one commit, checked file by file) into the app's data folder in the background, with an activity row, and read lens profiles from it once it is in place (unless LIGHTCRAFT_LENSFUN_DIR names another folder); the desktop app offers it on its first launch and in Settings. LIGHTCRAFT_LENSFUN_URL lists other places to fetch the same files from → {started, dir}",
-            always,
-            download
-        ),
-        cmd!(
             "lens.databaseStatus",
             "Lens Database Status",
             [],
@@ -208,5 +201,19 @@ pub fn specs() -> Vec<CommandSpec> {
             always,
             status
         ),
-    ]
+    ];
+    // downloads reach another computer
+    #[cfg(feature = "network")]
+    let v: Vec<CommandSpec> = v.into_iter().chain([
+            cmd!(
+                "lens.downloadDatabase",
+                "Download the Lens Database",
+                [],
+                None,
+                "{} — fetch lensfun's lens database (CC BY-SA 3.0, pinned to one commit, checked file by file) into the app's data folder in the background, with an activity row, and read lens profiles from it once it is in place (unless LIGHTCRAFT_LENSFUN_DIR names another folder); the desktop app offers it on its first launch and in Settings. LIGHTCRAFT_LENSFUN_URL lists other places to fetch the same files from → {started, dir}",
+                always,
+                download
+            ),
+    ]).collect();
+    v
 }

@@ -1,46 +1,50 @@
-//! Software updates, background check at startup, and startup prompt modal.
+//! Software updates, background check at startup, and startup prompt modal (the `self-update` feature; without it
+//! there is no Check for Updates and nothing here runs).
 
+#[cfg(feature = "self-update")]
 use serde_json::Value;
 
 use crate::LightcraftApp;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
 use craft_update::dialog::{CheckResultDialog, CheckResultResponse};
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
 use craft_update::updater::{Action, Status, Updater};
 
 pub(crate) struct Runtime {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     updater: Updater,
     /// The desktop app turns the check at start on; tests and the web build leave it off.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     startup_check: bool,
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     check_requested: bool,
     /// The context of the last frame, to wake the UI when a check is queued from a menu callback.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     repaint: Option<egui::Context>,
     /// A requested check's result dialog is showing.
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
     pub(crate) manual_window_open: bool,
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
     pub(crate) status_message: Option<String>,
 }
 
+// (derivable only without `self-update`: the updater has no Default)
+#[cfg_attr(any(not(feature = "self-update"), target_arch = "wasm32"), allow(clippy::derivable_impls))]
 impl Default for Runtime {
     fn default() -> Self {
         Self {
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
             updater: Updater::new(&crate::UPDATE_APP, env!("CARGO_PKG_VERSION")),
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
             startup_check: false,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
             check_requested: false,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
             repaint: None,
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
             manual_window_open: false,
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
             status_message: None,
         }
     }
@@ -48,14 +52,14 @@ impl Default for Runtime {
 
 impl LightcraftApp {
     /// Whether the app asks for a newer release when it starts (off until the desktop app turns it on).
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     pub fn set_startup_update_check(&mut self, on: bool) {
         self.updates_rt.startup_check = on;
     }
 
     /// Starts the helper of a ready update, which installs it once the process has exited. Call it
     /// in `on_exit` when the process ends there without dropping the app.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     pub fn start_pending_update(&mut self) {
         self.updates_rt.updater.start_pending_update();
     }
@@ -63,19 +67,20 @@ impl LightcraftApp {
 
 /// The update prompt owns the keyboard while it is open: shortcuts must not reach the library behind it.
 pub(crate) fn blocks_input(app: &LightcraftApp) -> bool {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     {
         app.updates_rt.updater.prompt_open()
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
     {
         let _ = app;
         false
     }
 }
 
+#[cfg(feature = "self-update")]
 pub(crate) fn check(app: &mut LightcraftApp) -> Result<Value, String> {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     {
         app.updates_rt.check_requested = true;
         if let Some(ctx) = &app.updates_rt.repaint {
@@ -92,7 +97,7 @@ pub(crate) fn check(app: &mut LightcraftApp) -> Result<Value, String> {
 }
 
 pub(crate) fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     {
         let rt = &mut app.updates_rt;
         rt.repaint = Some(ctx.clone());
@@ -103,20 +108,20 @@ pub(crate) fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
         }
         rt.updater.tick(ctx);
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
     let _ = (app, ctx);
 }
 
 /// Whether the result dialog shows: for every status but idle (a requested check, and the first
 /// start after an update, which reports that it installed or why it failed), and never over the
 /// startup prompt.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
 fn result_window_shows(status: &Status, prompt_open: bool) -> bool {
     !prompt_open && !matches!(status, Status::Idle)
 }
 
 pub(crate) fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     {
         // The close for a ready update waits until nothing is unsaved.
         let clean = app.session.unsaved().is_none();
@@ -140,7 +145,7 @@ pub(crate) fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
         }
     }
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
     if app.updates_rt.manual_window_open {
         let mut open = true;
         let shown = egui::Window::new(crate::i18n::tr("LightCraft Updates"))
@@ -170,14 +175,15 @@ pub(crate) fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     use lightcraft_engine::Session;
 
     #[test]
     fn default_runtime_is_idle() {
         let rt = Runtime::default();
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(any(not(feature = "self-update"), target_arch = "wasm32"))]
         assert!(!rt.manual_window_open);
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
         {
             assert!(!rt.startup_check);
             assert!(!rt.updater.prompt_open());
@@ -191,7 +197,7 @@ mod tests {
     /// reads the answer and opens the prompt. `updater` must not have been ticked before, or the
     /// repaint goes to another context. The test fails when the launcher manages this copy or
     /// when the answered offer opens no prompt.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     fn offer_and_wait(updater: &mut Updater, release: craft_update::Release) {
         let ctx = egui::Context::default();
         let (answered, wait) = std::sync::mpsc::channel();
@@ -212,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     fn startup_prompt_shows_and_closes() {
         let mut app = LightcraftApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
@@ -236,7 +242,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "self-update", not(target_arch = "wasm32")))]
     fn result_window_shows_every_status_but_idle() {
         let shown = [
             Status::Checking,

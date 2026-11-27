@@ -768,6 +768,7 @@ fn detect_faces_without_the_detector_offers_the_download_and_fetches_nothing_bef
 
 /// Pressing Download in Settings shows the model's terms first and fetches nothing until they are accepted; a build
 /// that cannot run recognition models offers no download. The licence dialog replaces Settings, which it was opened from.
+#[cfg(feature = "network")]
 #[test]
 fn download_shows_the_terms_first_and_fetches_nothing_until_accepted() {
     use crate::state::Dialog;

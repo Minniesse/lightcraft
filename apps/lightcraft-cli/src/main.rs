@@ -92,6 +92,10 @@ USAGE:
         --preview OUT.png   only render a ≤ 1024 px preview (nothing written next to the files)
   lightcraft-cli synth-merge hdr|panorama -o DIR
       Write synthetic merge inputs (procedural scene; bracketed DNGs or overlapping PNG views).
+";
+
+/// The `denoise-serve` lines of [`USAGE`], in a build with `network` (without it the subcommand is unknown).
+const DENOISE_SERVE_USAGE: &str = "\
   lightcraft-cli denoise-serve [OPTIONS]
       Run AI Denoise tiles for LightCraft on other computers (LIGHTCRAFT_DENOISE_URL=<this host>:7990 and
       LIGHTCRAFT_DENOISE_TOKEN there; see docs/denoise.md). Serves the installed model selected in Settings,
@@ -104,6 +108,9 @@ USAGE:
                           (default LIGHTCRAFT_DENOISE_TOKEN)
         --run-on WHERE    auto (default), gpu or cpu
         --max-connections N   concurrent clients (default 8)
+";
+
+const USAGE_TAIL: &str = "\
   lightcraft-cli commands [--json]   list every command id with its parameters
   lightcraft-cli controls [--json]   list every develop control id with its range
   lightcraft-cli calibrate [--max N] [--out DIR] FOLDERS/FILES…
@@ -120,6 +127,12 @@ USAGE:
       photos. --files K reads only the first K files by name (a sample of a slow network folder).
   lightcraft-cli --version | --help
 ";
+
+/// The help text: [`USAGE`], the `denoise-serve` part when this build has it, and the rest.
+fn usage() -> String {
+    let serve = if cfg!(feature = "network") { DENOISE_SERVE_USAGE } else { "" };
+    format!("{USAGE}{serve}{USAGE_TAIL}")
+}
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -182,6 +195,8 @@ fn main() -> ExitCode {
         Some("merge") => merge(&args[1..]),
         Some("synth-merge") => synth_merge(&args[1..]),
         Some("controls") => controls(&args[1..]),
+        // a TCP server for other computers: only with `network` (else an unknown subcommand)
+        #[cfg(feature = "network")]
         Some("denoise-serve") => denoise_serve(&args[1..]),
         Some("calibrate") => calibrate(&args[1..]),
         Some("bench-cull") => bench_cull::run(&args[1..]),
@@ -190,10 +205,10 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("--help" | "-h" | "help") | None => {
-            print!("{USAGE}");
+            print!("{}", usage());
             Ok(())
         }
-        Some(other) => Err(format!("unknown subcommand `{other}`\n\n{USAGE}")),
+        Some(other) => Err(format!("unknown subcommand `{other}`\n\n{}", usage())),
     };
     match r {
         Ok(()) => ExitCode::SUCCESS,
@@ -1064,7 +1079,7 @@ fn controls(args: &[String]) -> Result<(), String> {
 }
 
 /// `denoise-serve`: the remote half of AI Denoise (`lightcraft_denoise::remote`).
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network"))]
 fn denoise_serve(args: &[String]) -> Result<(), String> {
     use lightcraft_denoise::remote::{DEFAULT_PORT, ServerOptions, serve};
     use lightcraft_engine::denoise::RunOn;
@@ -1103,7 +1118,7 @@ fn denoise_serve(args: &[String]) -> Result<(), String> {
     serve(listener, s.model, s.tile, s.device, s.run, opts, std::sync::Arc::new(|m: &str| eprintln!("lightcraft-cli denoise-serve: {m}")))
 }
 
-#[cfg(not(feature = "denoise"))]
+#[cfg(all(not(feature = "denoise"), feature = "network"))]
 fn denoise_serve(_: &[String]) -> Result<(), String> {
     Err("denoise-serve: this build has no denoise support (build with the `denoise` feature)".into())
 }

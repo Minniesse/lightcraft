@@ -60,6 +60,8 @@ pub mod logging;
 pub mod media;
 pub mod memory;
 pub mod merge;
+// (without `network` nothing starts a download, but the state stays so `denoise.models.downloads` keeps its shape)
+#[cfg_attr(not(feature = "network"), allow(dead_code))]
 mod model_download;
 pub mod open_path;
 pub mod originals;

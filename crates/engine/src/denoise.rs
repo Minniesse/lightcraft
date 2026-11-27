@@ -52,9 +52,11 @@ pub use model::RunOn;
 #[cfg(all(feature = "denoise", test))]
 pub(crate) use model::default_loader;
 #[cfg(all(feature = "denoise", test))]
-use model::{GpuSide, Network, RemoteSide, network, worth_retrying};
+use model::{GpuSide, Network, worth_retrying};
 pub(crate) use model::{Loader, Model};
-#[cfg(feature = "denoise")]
+#[cfg(all(feature = "denoise", feature = "network", test))]
+use model::{RemoteSide, network};
+#[cfg(all(feature = "denoise", feature = "network"))]
 pub use model::{Serving, serving};
 pub(crate) use products::eligible;
 #[cfg(test)]

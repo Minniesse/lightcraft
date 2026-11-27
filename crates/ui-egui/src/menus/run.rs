@@ -1305,6 +1305,7 @@ fn ui_commands_10(app: &mut LightcraftApp, ctx: &egui::Context, id: &str, p: &Va
             app.ui.dialog = Some(Dialog::About);
             Ok(Value::Null)
         }
+        #[cfg(feature = "self-update")]
         "app.checkForUpdates" => crate::updates_ui::check(app),
         "photo.editInPhotoCraft" => edit_in(app, ctx, p, true),
         "photo.editInExternal" => edit_in(app, ctx, p, false),
@@ -1501,8 +1502,8 @@ fn ui_commands_12(app: &mut LightcraftApp, ctx: &egui::Context, id: &str, p: &Va
         "app.showInFinder" => show_in_finder(app),
         "app.showInFolders" => show_in_folders(app, p.get("id").and_then(Value::as_u64).map(lightcraft_catalog::PhotoId)),
         "app.openLogFolder" => open_log_folder(app),
-        "app.discord" | "app.website" | "app.github" | "app.artcraft" | "app.help" | "app.feedback" => {
-            let url = crate::links::url_of(id).unwrap_or(crate::links::WEBSITE);
+        "app.github" | "app.help" | "app.feedback" => {
+            let url = crate::links::url_of(id).unwrap_or(crate::links::GITHUB);
             crate::links::open(app, url)
         }
         "app.exportPrevious" => match app.session.last_export.clone() {
