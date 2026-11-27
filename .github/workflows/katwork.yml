@@ -32,3 +32,14 @@ jobs:
           set -o pipefail
           cargo test --locked -p lightcraft-engine --no-default-features --test katwork_profile 2>&1 | tee katwork-profile-test.log
           grep -E 'test result: ok\. [1-9][0-9]* passed' katwork-profile-test.log
+      - name: The UI offers no update check and no download, with the gates off
+        # One test binary per step, so a pass from another binary cannot hide a zero.
+        run: |
+          set -o pipefail
+          cargo test --locked -p lightcraft-ui-egui --no-default-features --lib -- tests::katwork_profile:: 2>&1 | tee katwork-ui-test.log
+          grep -E 'test result: ok\. [1-9][0-9]* passed' katwork-ui-test.log
+      - name: The CLI neither offers nor runs denoise-serve, with the gates off
+        run: |
+          set -o pipefail
+          cargo test --locked -p lightcraft-cli --no-default-features --features denoise --test it -- denoise_serve_is_neither_offered_nor_run_without_network 2>&1 | tee katwork-cli-test.log
+          grep -E 'test result: ok\. [1-9][0-9]* passed' katwork-cli-test.log
